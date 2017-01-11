@@ -8,46 +8,53 @@
 #include"CellMap.h"
 #include"WindowWorldGlobals.h"
 #include"Rule.h"
+#include"ViewStart.h"
 
-namespace ViewAutomaton		//Using a namespace to group together Automaton View functions for easier understadning.
+#define EXIT_BUTTON 1
+#define PLAY_BUTTON 2
+
+namespace ViewAutomaton		
 {
-	extern int paused, gridLineV, gridLineH, cell, startButton, playSymbol, pauseSymbol;
-	extern float barX0, barY0, barX1, barY1, barWidth, barHeight, startBorder[4][2], startOffsetX, startOffsetY;
+	extern GLuint listsBase, gridLineV, gridLineH, cell, exitButtonInner, exitButtonTop, exitButtonBottom, exitButtonLeft, exitButtonRight, exitButtonX, playButtonPlay, playButtonPause;
+	extern GLsizei numOfLists;
+	extern int paused, exitButtonBorders[2][2];
 	extern clock_t timerStart;
 	extern double delay;
 
-	void HandOver();		//Recieves control of display
-	
-	void Initialize();		//Initializes global view variables, display lists and other elements.
-	
-	void Display();			//Displays elements
-	
-	void ButtonPressCheck(double x, double y);		//Check which sidebar button was pressed, IF pressed
-	
-	int StartButtonPressed(double x, double y);		//Check if start button was pressed
-	
-	void Run();				//Starts automaton and disables other interaction
+	void HandOver();		
 
-	namespace Mouse			//For grouping Mouse click events
+	void Initialize();
+
+	void Display();
+
+	void exitAutomaton();
+
+	int ButtonPressCheck(int x, int y);	
+	
+	void Run();				
+
+	namespace Mouse			
 	{
-		void Setup(int button, int state, int x, int y);		//For setting up cells or pressing sidebar buttons
+		void Setup(int button, int state, int x, int y);		
 		
-		void Running(int button, int state, int x, int y);		//For specific buttons allowed during automaton running
+		void Running(int button, int state, int x, int y);		
 	}
 
-	namespace MouseMotion		//For grouping motion mouse events
+	namespace MouseMotion		
 	{
-		void PopulateCells(int x, int y);		//To populate cells hovered over when left button pressed
+		void PopulateCells(int x, int y);		
 		
-		void UnpopulateCells(int x, int y);		//To unpoluate ..........................................
+		void UnpopulateCells(int x, int y);		
 	}
 
-	namespace Draw		//For grouping Drawing functions
+	namespace Draw		
 	{
-		void Grid();			//Draws cell grid
+		extern int exitButtonDown, playButtonDown;
 		
-		void FilledCells();		//Draws filled (live) cell
+		void Grid();			
 		
-		void StartButton();		//Draws play/pause button
+		void FilledCells();		
+
+		void Sidebar();
 	}
 }

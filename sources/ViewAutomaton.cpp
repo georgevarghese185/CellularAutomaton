@@ -2,63 +2,47 @@
 
 namespace ViewAutomaton
 {
-	int paused, gridLineV, gridLineH, cell, startButton, playSymbol, pauseSymbol;
-	float barX0, barY0, barX1, barY1, barWidth, barHeight, startBorder[4][2], startOffsetX, startOffsetY;
+	GLuint listsBase, gridLineV, gridLineH, cell, exitButtonInner, exitButtonTop, exitButtonBottom, exitButtonLeft, exitButtonRight, exitButtonX, playButtonPlay, playButtonPause;
+	GLsizei numOfLists;
+	int paused, exitButtonBorders[2][2] = { { 3,97 },{ 16,89 } };
+	int Draw::exitButtonDown = FALSE, Draw::playButtonDown = FALSE;
 	clock_t timerStart;
 	double delay;
 
 	void Initialize()
 	{
-		int i;
-		srand(time(NULL));			//For any random event to be implemented/tested
+		srand(time(NULL));
 
-		WindowWidth = 590, WindowHeight = 500;								//From "WindowWorldGlobals.h" Set default width and height. (500x500 for cell grid, 90 extra pixels wide for sidebar)
-		WidthHeightRatio = (double)WindowWidth / (double)WindowHeight;		//From "WindowWorldGlobals.h" used for reshaping and coordinate calculations
+		WindowWidth = 590, WindowHeight = 500;
+		WidthHeightRatio = (double)WindowWidth / (double)WindowHeight;
+		glutReshapeWindow(WindowWidth, WindowHeight);
 
-		VRwidth = (GRID_MAX + (WindowWidth - WindowHeight) / ((double)WindowHeight / (double)GRID_MAX));		//From "WindowWorldGlobals.h" for reshaping and coordinate calculations
-		VRheight = GRID_MAX;		//same
-		CM.Initialize(GRID_MAX);	//Initialzing cellmap (CellMap.h) for holding cell live/dead state.
+		VRwidth = (GRID_MAX + (WindowWidth - WindowHeight) / ((double)WindowHeight / (double)GRID_MAX));
+		VRheight = GRID_MAX;
+		CM.Initialize(GRID_MAX);
 
-		glMatrixMode(GL_PROJECTION);					//Set viewing area
-		glLoadIdentity();
-		gluOrtho2D(0, VRwidth, 0, VRheight);
-		glMatrixMode(GL_MODELVIEW);
-		glClearColor(1, 1, 1, 1);
-		glutReshapeWindow(WindowWidth, WindowHeight);	//Resize window
+		glClearColor(0.1725, 0.1725, 0.1725, 1);
 
-		barX0 = GRID_MAX;		//initializing sidebar boundaries
-		barX1 = VRwidth;
-		barY0 = 0;
-		barY1 = VRheight;
-		barWidth = barX1 - barX0;		//Sidebar width and height (for button placement calculations)
-		barHeight = barY1 - barY0;
-
-		startBorder[0][0] = barX0 + 0.05 *barWidth; startBorder[0][1] = barY0 + 0.9 *barHeight;			//4 vertices of play/pause button. Vertices taken in forms of %'s to be independant from variable grid size
-		startBorder[1][0] = barX0 + 0.95 *barWidth; startBorder[1][1] = barY0 + 0.9 *barHeight;	
-		startBorder[2][0] = barX0 + 0.95 *barWidth; startBorder[2][1] = barY0 + 0.8 *barHeight;
-		startBorder[3][0] = barX0 + 0.05 *barWidth; startBorder[3][1] = barY0 + 0.8 *barHeight;
-		int startLength = startBorder[1][0] - startBorder[0][0], startHeight = startBorder[1][1] - startBorder[2][1];
-
-		startOffsetX = startLength * 0.1 / 2;			//Offset of smaller inner box of start button. Offset used in accordance with scaling and transformation
-		startOffsetY = startHeight * 0.1 / 2;
-		startOffsetX = startBorder[3][0] - 0.9*startBorder[3][0] + startOffsetX;
-		startOffsetY = startBorder[3][1] - 0.9*startBorder[3][1] + startOffsetY;
-
-		glNewList(gridLineV = glGenLists(1), GL_COMPILE);	//Display list for vertical line for grid
+		GLuint i;
+		numOfLists = 11;
+		listsBase = glGenLists(numOfLists);
+		
+		i = 0;
+		glNewList(gridLineV = listsBase + i++, GL_COMPILE);
 		glBegin(GL_LINES);
 		glVertex2f(0, 0);
 		glVertex2f(0, GRID_MAX);
 		glEnd();
 		glEndList();
 
-		glNewList(gridLineH = glGenLists(1), GL_COMPILE);	//DL for horizontal grid line
+		glNewList(gridLineH = listsBase + i++, GL_COMPILE);
 		glBegin(GL_LINES);
 		glVertex2f(0, 0);
 		glVertex2f(GRID_MAX, 0);
 		glEnd();
 		glEndList();
 
-		glNewList(cell = glGenLists(1), GL_COMPILE);		//DL for single live cell
+		glNewList(cell = listsBase + i++, GL_COMPILE);
 		glBegin(GL_QUADS);
 		glVertex2f(0, 0);
 		glVertex2f(1, 0);
@@ -67,44 +51,110 @@ namespace ViewAutomaton
 		glEnd();
 		glEndList();
 
-		glNewList(startButton = glGenLists(1), GL_COMPILE);	//DL for start button(outer or inner rectangle)
+		glNewList(exitButtonInner = listsBase + i++, GL_COMPILE);
 		glBegin(GL_QUADS);
-		for (i = 0; i < 4; i++) glVertex2fv(startBorder[i]);
+		glVertex2f(4, 96);
+		glVertex2f(15, 96);
+		glVertex2f(15, 90);
+		glVertex2f(4, 90);
 		glEnd();
 		glEndList();
 
-		glNewList(playSymbol = glGenLists(1), GL_COMPILE);	//DL for play symbol
+		glNewList(exitButtonTop = listsBase + i++, GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(3, 97);
+		glVertex2f(16, 97);
+		glVertex2f(15, 96);
+		glVertex2f(4, 96);
+		glEnd();
+		glEndList();
+
+		glNewList(exitButtonRight = listsBase + i++, GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(15, 96);
+		glVertex2f(16, 97);
+		glVertex2f(16, 89);
+		glVertex2f(14, 90);
+		glEnd();
+		glEndList();
+
+		glNewList(exitButtonBottom = listsBase + i++, GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(4, 90);
+		glVertex2f(15, 90);
+		glVertex2f(16, 89);
+		glVertex2f(3, 89);
+		glEnd();
+		glEndList();
+
+		glNewList(exitButtonLeft = listsBase + i++, GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(3, 97);
+		glVertex2f(4, 96);
+		glVertex2f(4, 90);
+		glVertex2f(3, 89);
+		glEnd();
+		glEndList();
+
+		glNewList(exitButtonX = listsBase + i++, GL_COMPILE);
+		glBegin(GL_QUADS);
+		glColor3f(1, 0, 0);
+		glVertex2f(7, 95);
+		glVertex2f(8, 95);
+		glVertex2f(9.5, 94);
+		glVertex2f(9, 93);
+		glVertex2f(9.5, 94);
+		glVertex2f(11, 95);
+		glVertex2f(12, 95);
+		glVertex2f(10, 93);
+		glVertex2f(10, 93);
+		glVertex2f(12, 91);
+		glVertex2f(11, 91);
+		glVertex2f(9.5, 92);
+		glVertex2f(9.5, 92);
+		glVertex2f(8, 91);
+		glVertex2f(7, 91);
+		glVertex2f(9, 93);
+		glVertex2f(9, 93);
+		glVertex2f(9.5, 94);
+		glVertex2f(10, 93);
+		glVertex2f(9.5, 92);
+		glEnd();
+		glEndList();
+
+		glNewList(playButtonPlay = listsBase + i++, GL_COMPILE);
 		glBegin(GL_TRIANGLES);
-		glVertex2f(startBorder[0][0] + 0.2*startLength, startBorder[0][1] - 0.05*startHeight);
-		glVertex2f(startBorder[3][0] + 0.2*startLength, startBorder[3][1] + 0.05*startHeight);
-		glVertex2f(startBorder[1][0] - 0.2*startLength, startBorder[3][1] + 0.5*startHeight);
+		glVertex2f(7,95);
+		glVertex2f(7,91);
+		glVertex2f(12,93);
 		glEnd();
 		glEndList();
 
-		glNewList(pauseSymbol = glGenLists(1), GL_COMPILE);	//DL for pause symbol
+		glNewList(playButtonPause = listsBase + i++, GL_COMPILE);
 		glBegin(GL_QUADS);
-		glVertex2f(startBorder[0][0] + startLength * 0.3, startBorder[0][1] - startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.45, startBorder[0][1] - startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.45, startBorder[2][1] + startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.3, startBorder[2][1] + startHeight * 0.1);
+		glVertex2f(7,95);
+		glVertex2f(9,95);
+		glVertex2f(9,91);
+		glVertex2f(7,91);
 
-		glVertex2f(startBorder[0][0] + startLength * 0.6, startBorder[0][1] - startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.75, startBorder[0][1] - startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.75, startBorder[2][1] + startHeight * 0.1);
-		glVertex2f(startBorder[0][0] + startLength * 0.6, startBorder[2][1] + startHeight * 0.1);
+		glVertex2f(10,95);
+		glVertex2f(12,95);
+		glVertex2f(12,91);
+		glVertex2f(10,91);
 		glEnd();
 		glEndList();
+		//last DL (11)
 	}
 
 	void HandOver()
 	{
 		system("cls");
-		cout << "Enter Sqaure Grid Size: ";		//Get grid size from user
+		cout << "Enter Sqaure Grid Size: ";		
 		cin >> GRID_MAX;
 		cout << "Enter delay(in seconds): ";
 		cin >> delay;
 
-		paused = TRUE;	//initially, Automaton not running
+		paused = TRUE;	
 		Initialize();
 		glutReshapeFunc(Reshape);
 		glutDisplayFunc(Display);
@@ -115,34 +165,183 @@ namespace ViewAutomaton
 
 	void Display()
 	{
+		GLint viewport[4];
 		glClear(GL_COLOR_BUFFER_BIT);
+		glPushAttrib(GL_VIEWPORT_BIT);
+		glGetIntegerv(GL_VIEWPORT, viewport);
+
+		glViewport(viewport[0], viewport[1], viewport[2] * (1 - 0.1526), viewport[3]);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(0, VRheight, 0, VRheight);
+		glMatrixMode(GL_MODELVIEW);
 
 		Draw::FilledCells();
-
 		Draw::Grid();
-
-		Draw::StartButton();
-
 		glFlush();
+
+		glViewport(viewport[0] + viewport[2] * (1 - 0.1526), viewport[1], viewport[2] * 0.1526, viewport[3]);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(0, 18, 0, 100);
+		glMatrixMode(GL_MODELVIEW);
+
+		Draw::Sidebar();
+		glFlush();
+		glutSwapBuffers();
+		glPopAttrib();
 	}
 
-	void ButtonPressCheck(double x, double y)
+	void Draw::Sidebar()
 	{
-		if (StartButtonPressed(x, y))
+		if (exitButtonDown)
 		{
-			paused = FALSE;
-			timerStart = clock();
-			glutIdleFunc(Run);	//Starts processing automaton's state changes during idle time.
-			glutMouseFunc(Mouse::Running);
+			glPushMatrix();
+
+			glColor3ub(222,222,222);
+			glCallList(exitButtonInner);
+			
+			glColor3ub(184,0,0);
+			glTranslatef(9.5, 93, 0);
+			glScalef(0.95, 0.95, 0);
+			glTranslatef(-9.5, -93, 0);
+			glCallList(exitButtonX);
+
+			
+			glColor3ub(195,195,195);
+			glCallList(exitButtonTop);
+			
+			glColor3ub(245,245,245);
+			glCallList(exitButtonBottom);
+			
+			glColor3ub(232,232,232);
+			glCallList(exitButtonLeft);
+			
+			glColor3ub(212,212,212);
+			glCallList(exitButtonRight);
+
+			glPopMatrix();
+		}
+		else
+		{
+			glColor3ub(238,238,238);
+			glCallList(exitButtonInner);
+			
+			glColor3ub(215,2,2);
+			glCallList(exitButtonX);
+			
+			glColor3ub(240,240,240);
+			glCallList(exitButtonTop);
+			
+			glColor3ub(197,197,197);
+			glCallList(exitButtonBottom);
+			
+			glColor3ub(209,209,209);
+			glCallList(exitButtonLeft);
+			
+			glColor3ub(235,235,235);
+			glCallList(exitButtonRight);
+		}
+
+		if (playButtonDown)
+		{
+			GLint stackSize[20];
+			glPushMatrix();
+			glTranslatef(0, -14, 0);
+
+			glColor3ub(222, 222, 222);
+			glCallList(exitButtonInner);
+
+			glColor3ub(0, 0, 0);
+			glTranslatef(9.5, 93, 0);
+			glScalef(0.95, 0.95, 0);
+			glTranslatef(-9.5, -93, 0);
+			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
+
+			glColor3ub(195, 195, 195);
+			glCallList(exitButtonTop);
+
+			glColor3ub(245, 245, 245);
+			glCallList(exitButtonBottom);
+
+			glColor3ub(232, 232, 232);
+			glCallList(exitButtonLeft);
+
+			glColor3ub(212, 212, 212);
+			glCallList(exitButtonRight);
+
+			glPopMatrix();
+		}
+		else
+		{
+			glPushMatrix();
+			glTranslatef(0, -14, 0);
+
+			glColor3ub(238, 238, 238);
+			glCallList(exitButtonInner);
+
+			glColor3ub(0, 0, 0);
+			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
+
+			glColor3ub(240, 240, 240);
+			glCallList(exitButtonTop);
+
+			glColor3ub(197, 197, 197);
+			glCallList(exitButtonBottom);
+
+			glColor3ub(209, 209, 209);
+			glCallList(exitButtonLeft);
+
+			glColor3ub(235, 235, 235);
+			glCallList(exitButtonRight);
+
+			glPopMatrix();
 		}
 	}
 
-	int StartButtonPressed(double x, double y)
+	int ButtonPressCheck(int x, int y)
 	{
-		if (x >= startBorder[0][0] && x <= startBorder[1][0] && y >= startBorder[2][1] && y <= startBorder[1][1])	//check if x and y within start buttons boundaries.
-			return TRUE;
+		GLint viewport[4];
+		GLubyte pixelColor[3], exitColor = 10, playColor = 20;
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		glPushAttrib(GL_VIEWPORT_BIT);
+		glGetIntegerv(GL_VIEWPORT, viewport);
+
+		glViewport(viewport[0] + viewport[2] * (1 - 0.1526), viewport[1], viewport[2] * 0.1526, viewport[3]);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(0, 18, 0, 100);
+		glMatrixMode(GL_MODELVIEW);
+
+		glColor3ub(exitColor, 0, 0);
+		glRectf(exitButtonBorders[0][0], exitButtonBorders[0][1], exitButtonBorders[1][0], exitButtonBorders[1][1]);
+		
+		glPushMatrix();
+		glTranslatef(0, -14, 0);
+		glColor3ub(playColor, 0, 0);
+		glRectf(exitButtonBorders[0][0], exitButtonBorders[0][1], exitButtonBorders[1][0], exitButtonBorders[1][1]);
+		glPopMatrix();
+		
+		glFlush();
+
+		glReadBuffer(GL_BACK);
+		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &pixelColor);
+		glPopAttrib();
+
+		if (pixelColor[0] == exitColor)
+		{
+			return EXIT_BUTTON;
+		}
+		else if (pixelColor[0] == playColor)
+		{
+			return PLAY_BUTTON;
+		}
 		else
-			return FALSE;
+		{
+			return -1;
+		}
+
 	}
 
 	void Run()
@@ -168,6 +367,16 @@ namespace ViewAutomaton
 		}
 	}
 
+	void exitAutomaton()
+	{
+		glutPostRedisplay();
+		glDeleteLists(listsBase, numOfLists);
+		glutMouseFunc(NULL);
+		glutMotionFunc(NULL);
+		glutReshapeFunc(NULL);
+		glutIdleFunc(ViewStart::HandOver);
+	}
+
 	void Mouse::Setup(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
@@ -190,25 +399,71 @@ namespace ViewAutomaton
 				glutPostRedisplay();
 			}
 			else
-				ButtonPressCheck(xWorld, yWorld);
+			{
+				int pressedButton = ButtonPressCheck(x, WindowHeight - y);
+				if (pressedButton == EXIT_BUTTON)
+				{
+					Draw::exitButtonDown = TRUE;
+					glutPostRedisplay();
+				}
+				else if (pressedButton == PLAY_BUTTON)
+				{
+					Draw::playButtonDown = TRUE;
+					glutPostRedisplay();
+				}
+			}
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		{
-			glutMotionFunc(NULL);
+			if (Draw::playButtonDown)
+			{
+				Draw::playButtonDown = FALSE;
+				paused = FALSE;
+				timerStart = clock();
+				glutIdleFunc(Run);
+				glutMouseFunc(Mouse::Running);
+			}
+			else if (Draw::exitButtonDown)
+			{
+				Draw::exitButtonDown = FALSE;
+				exitAutomaton();
+			}
+			else
+			{
+				glutMotionFunc(NULL);
+			}
 		}
 	}
 
 	void Mouse::Running(int button, int state, int x, int y)
 	{
-		if (button == GLUT_LEFT && state == GLUT_DOWN)
+		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		{
-			double xWorld = x, yWorld = y;
-			WindowToWorldCoordinates(xWorld, yWorld);
-			if (StartButtonPressed(xWorld, yWorld))
+			Sleep(10);
+			int pressedButton = ButtonPressCheck(x, WindowHeight - y);
+			if (pressedButton == EXIT_BUTTON)
 			{
+				Draw::exitButtonDown = TRUE;
+				glutPostRedisplay();
+			}
+			else if (pressedButton == PLAY_BUTTON)
+			{
+				Draw::playButtonDown = TRUE;
+			}
+		}
+		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+		{
+			if (Draw::playButtonDown)
+			{
+				Draw::playButtonDown = FALSE;
 				paused = TRUE;
 				glutIdleFunc(NULL);
 				glutMouseFunc(Setup);
+			}
+			else if (Draw::exitButtonDown)
+			{
+				Draw::exitButtonDown = FALSE;
+				exitAutomaton();
 			}
 		}
 	}
@@ -237,7 +492,7 @@ namespace ViewAutomaton
 
 	void Draw::Grid()
 	{
-		glColor3f(0.8, 0.8, 0.8);
+		glColor3ub(115, 115, 115);
 		glPushMatrix();
 		for (int i = 0; i < GRID_MAX; i++)
 		{
@@ -252,7 +507,7 @@ namespace ViewAutomaton
 	void Draw::FilledCells()
 	{
 		int i, j;
-		glColor3f(1, 1, 0);
+		glColor3ub(84, 200, 204);
 		for (i = 0; i < GRID_MAX; i++)
 			for (j = 0; j < GRID_MAX; j++)
 				if (CM(i, j) == POPULATED)
@@ -262,24 +517,5 @@ namespace ViewAutomaton
 					glCallList(cell);
 					glPopMatrix();
 				}
-	}
-
-	void Draw::StartButton()
-	{
-		glColor3f(0, 0, 0);
-		glCallList(startButton);
-
-		glPushMatrix();
-		glTranslatef(startOffsetX, startOffsetY, 0);
-		glScalef(0.9, 0.9, 0);
-		glColor3f(0.5, 0.5, 0.5);
-		glCallList(startButton);
-		glColor3f(0, 0, 0);
-		if (paused)
-			glCallList(playSymbol);
-		else
-			glCallList(pauseSymbol);
-		glPopMatrix();
-
 	}
 }

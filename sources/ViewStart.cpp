@@ -116,6 +116,7 @@ namespace ViewStart
 		//DrawGrid();
 
 		glFlush();
+		glutSwapBuffers();
 	}
 
 	void Mouse::Mouse(int button, int state, int x, int y)
@@ -132,6 +133,7 @@ namespace ViewStart
 		else if (button == GLUT_LEFT && state == GLUT_UP && startButtonDown)
 		{
 			startButtonDown = FALSE;
+			glutPostRedisplay();
 			glDeleteLists(startButton, 5);
 			glutMouseFunc(NULL);
 			glutReshapeFunc(NULL);

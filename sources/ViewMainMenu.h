@@ -15,9 +15,8 @@ namespace ViewMainMenu
 {
 	extern double VRwidth, VRheight;
 	extern const double WHRatio;
-	extern GLuint listsBase, buttonPressed, buttonReleased, backButtonPressed, backButtonReleased;
-	extern GLsizei numOfLists;
 	extern Textures *tex;
+	extern Buttons *buttons;
 
 	void HandOver();
 	void Reshape(int w, int h);
@@ -26,19 +25,7 @@ namespace ViewMainMenu
 	void DummyDisplay();
 	void exitMainMenu();
 	
-	namespace Mouse
-	{
-		void Mouse(int button, int state, int x, int y);
-		int ButtonPressCheck(int x, int y);
-	}
-
-	namespace Draw
-	{
-		extern int CAPreButtonDown, CACustButtonDown, demoButtonDown, backButtonDown;
-
-		inline void ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale);
-		void Buttons();
-	}
+	void Mouse(int button, int state, int x, int y);
 }
 
 #endif

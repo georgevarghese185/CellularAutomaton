@@ -17,10 +17,11 @@ namespace ViewCustom
 {
 	extern double VRwidth, VRheight;
 	extern const double WHRatio;
-	extern GLuint listsBase, continueButtonReleased, continueButtonPressed, backButtonReleased, backButtonPressed, inputBox;
+	extern GLuint listsBase, inputBox;
 	extern GLsizei numOfLists;
 	extern int gotRules, showCursor;
 	extern Textures *tex;
+	extern Buttons *buttons;
 	extern string input;
 	extern clock_t startTimer;
 
@@ -34,30 +35,18 @@ namespace ViewCustom
 	void CursorBlink();		//Blinking curson in textbox
 	void exitCustom();
 
-	namespace Mouse
-	{
-		void Mouse(int button, int state, int x, int y);
-		int ButtonPressCheck(int x, int y);
-	}
+	void Mouse(int button, int state, int x, int y);
 
 	namespace GetRules	//getting rules from console window
 	{
 		extern vector<int> populationState, condition, neighbour, result;
-		
+
 		void Menu();
 		void AddRule();
 		void ViewRules();
 		void ClearRules();
+		void clearLast();
 		void Begin();
 	}
-
-	namespace Draw
-	{
-		extern int backButtonDown, continueButtonDown;
-		
-		inline void ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale);
-		void Buttons();
-	}
 }
-
 #endif

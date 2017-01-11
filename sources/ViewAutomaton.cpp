@@ -2,28 +2,53 @@
 
 namespace ViewAutomaton
 {
+	Buttons2::Buttons2(int numOfButtons):Buttons(numOfButtons){}
+	
+	void Buttons2::DrawPlayButton(int buttonName,int paused)
+	{
+		if (_buttonDown[buttonName])
+		{
+			glPushMatrix();
+			glTranslated(_buttonCenter[buttonName][0], _buttonCenter[buttonName][1], 0);
+			glScaled(0.95, 0.95, 0);
+			glTranslated(-_buttonCenter[buttonName][0], -_buttonCenter[buttonName][1], 0);
+			glPushMatrix(); glTranslatef(_buttonBorders[buttonName][0], _buttonBorders[buttonName][1], 0);
+			glCallList(_buttonGraphic[_button[buttonName]][1]); glPopMatrix();
+			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
+			glPopMatrix();
+		}
+		else
+		{
+			glPushMatrix(); glTranslatef(_buttonBorders[buttonName][0], _buttonBorders[buttonName][1], 0);
+			glCallList(_buttonGraphic[_button[buttonName]][0]); glPopMatrix();
+			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
+		}
+	}
+
 	double VRwidth, VRheight, px;
 	const double WHRatio = 680.0 / 576.0;
 	GLint vp[4], automatonVP[4], sidebarVP[4];
-	GLuint listsBase, grid, cell, ReleasedButton, PressedButton, exitButtonX, playButtonPlay, playButtonPause, plus, minus, delayBox;
+	GLuint listsBase, grid, cell, exitButtonX, playButtonPlay, playButtonPause, plus, minus, delayBox;
 	GLsizei numOfLists;
-	int paused,Draw::exitButtonDown = FALSE, Draw::playButtonDown = FALSE, Draw::resetButtonDown = FALSE;
 	clock_t timerStart;
 	int delay;
+	bool paused;
 	Textures *tex;
+	Buttons2 *buttons;
 	Cell cm;
 
-#define EXIT_BUTTON 1
-#define PLAY_BUTTON 2
-#define RESET_BUTTON 3
-#define PLUS_BUTTON 4
-#define MINUS_BUTTON 5
+#define BUTTON 0
+#define EXIT_BUTTON 0
+#define PLAY_BUTTON 1
+#define RESET_BUTTON 2
+#define PLUS_BUTTON 3
+#define MINUS_BUTTON 4
 #define TEX_RESET 0
 #define TEX_DELAY 1
 
 	void HandOver()		//HandOver view.
 	{
-		paused = TRUE;
+		paused = true;
 		Initialize();
 		calcVPs();
 		glutReshapeFunc(Reshape);
@@ -61,7 +86,6 @@ namespace ViewAutomaton
 
 	void Initialize()		//Initialize variables and DLists
 	{
-		//srand(time(NULL));
 		if (WindowWidth < 680 || WindowHeight < 576)	//Resize only if necessary
 		{
 			WindowWidth = 680, WindowHeight = 576;
@@ -74,9 +98,8 @@ namespace ViewAutomaton
 		delay = 100;
 
 		glClearColor(0.1725f, 0.1725f, 0.1725f, 1.0f);
-		//glClearColor(1, 1, 1, 1);
 		GLuint i;
-		numOfLists = 10;
+		numOfLists = 8;
 		listsBase = glGenLists(numOfLists);
 		
 		i = 0;
@@ -84,69 +107,7 @@ namespace ViewAutomaton
 		glNewList(cell = listsBase + i++, GL_COMPILE);
 		glRectf(0, 0, 1, 1);
 		glEndList();
-
-		glNewList(ReleasedButton = listsBase + i++, GL_COMPILE);
-		glColor3ub(238, 238, 238);
-		glRectf(4, 90, 15, 96);
-		glBegin(GL_QUADS);
-		//top
-		glColor3ub(240, 240, 240);
-		glVertex2f(3, 97);
-		glVertex2f(16, 97);
-		glVertex2f(15, 96);
-		glVertex2f(4, 96);
-		//right
-		glColor3ub(235, 235, 235);
-		glVertex2f(15, 96);
-		glVertex2f(16, 97);
-		glVertex2f(16, 89);
-		glVertex2f(14, 90);
-		//bottom
-		glColor3ub(197, 197, 197);
-		glVertex2f(4, 90);
-		glVertex2f(15, 90);
-		glVertex2f(16, 89);
-		glVertex2f(3, 89);
-		//left
-		glColor3ub(209, 209, 209);
-		glVertex2f(3, 97);
-		glVertex2f(4, 96);
-		glVertex2f(4, 90);
-		glVertex2f(3, 89);
-		glEnd();
-		glEndList();
-
-		glNewList(PressedButton = listsBase + i++, GL_COMPILE);
-		glColor3ub(222, 222, 222);
-		glRectf(4, 90, 15, 96);
-		glBegin(GL_QUADS);
-		//top
-		glColor3ub(195, 195, 195);
-		glVertex2f(3, 97);
-		glVertex2f(16, 97);
-		glVertex2f(15, 96);
-		glVertex2f(4, 96);
-		//right
-		glColor3ub(212, 212, 212);
-		glVertex2f(15, 96);
-		glVertex2f(16, 97);
-		glVertex2f(16, 89);
-		glVertex2f(14, 90);
-		//bottom
-		glColor3ub(245, 245, 245);
-		glVertex2f(4, 90);
-		glVertex2f(15, 90);
-		glVertex2f(16, 89);
-		glVertex2f(3, 89);
-		//left
-		glColor3ub(232, 232, 232);
-		glVertex2f(3, 97);
-		glVertex2f(4, 96);
-		glVertex2f(4, 90);
-		glVertex2f(3, 89);
-		glEnd();
-		glEndList();
-
+		
 		glNewList(exitButtonX = listsBase + i++, GL_COMPILE);
 		glBegin(GL_QUADS);
 		glColor3f(1, 0, 0);
@@ -176,16 +137,16 @@ namespace ViewAutomaton
 		glNewList(playButtonPlay = listsBase + i++, GL_COMPILE);
 		glColor3ub(0, 0, 0);
 		glBegin(GL_TRIANGLES);
-		glVertex2f(7,95);
-		glVertex2f(7,91);
-		glVertex2f(12,93);
+		glVertex2f(7,81);
+		glVertex2f(7,77);
+		glVertex2f(12,79);
 		glEnd();
 		glEndList();
 
 		glNewList(playButtonPause = listsBase + i++, GL_COMPILE);
 		glColor3ub(0, 0, 0);
-		glRectf(7, 91, 9, 95);
-		glRectf(10, 91, 12, 95);
+		glRectf(7, 77, 9, 81);
+		glRectf(10, 77, 12, 81);
 		glEndList();
 
 		glNewList(plus = listsBase + i++, GL_COMPILE);
@@ -216,17 +177,28 @@ namespace ViewAutomaton
 		tex = new Textures(2);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_RESET", 220, 120, TEX_RESET);
-		tex->MakeDList(TEX_RESET, 4, 90, 15, 96);
+		tex->MakeDList(TEX_RESET, 4, 3, 15, 9);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_DELAY", 120, 50, TEX_DELAY);
 		tex->MakeDList(TEX_DELAY, 3, 65, 15, 70);
+
+		buttons = new Buttons2(5);
+		buttons->MakeButtonGraphic(BUTTON, 0, 0, 13, 8, 1, 1, 12, 7, 
+			Color(222, 222, 222), Color(195, 195, 195), Color(245, 245, 245), Color(232, 232, 232), Color(212, 212, 212),
+			Color(238, 238, 238), Color(240, 240, 240), Color(197, 197, 197), Color(209, 209, 209), Color(235, 235, 235));
+		
+		buttons->MakeButton(EXIT_BUTTON, 3, 89, 16, 97, BUTTON);
+		buttons->MakeButton(PLAY_BUTTON, 3, 89 - 14, 16, 97 - 14,BUTTON);
+		buttons->MakeButton(RESET_BUTTON, 3, 89 - 87, 16, 97 - 87, BUTTON);
+		buttons->MakeButton(PLUS_BUTTON, 1, 50, 7, 56, NULL);
+		buttons->MakeButton(MINUS_BUTTON, 11, 50, 17, 56, NULL);
+		
 	}
 
 	void MakeGrid()		//Initialize DList for square grid
 	{
 		double len = cm.GridSize();
 		glNewList(grid, GL_COMPILE);
-		//glColor3f(0.3,0.3, 0.3);
 		glColor3ub(115, 115, 115);
 		glBegin(GL_LINES);
 		for (int i = 0; i < len; i++)
@@ -294,7 +266,8 @@ namespace ViewAutomaton
 		glutMouseFunc(NULL);
 		glutMotionFunc(NULL);
 		glutReshapeFunc(NULL);
-		tex->~Textures();
+		delete tex;
+		delete buttons;
 		cm.CleanUp();
 		glutIdleFunc(ViewMainMenu::HandOver);
 	}
@@ -303,109 +276,53 @@ namespace ViewAutomaton
 	{
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		{
-			double xWorld = x, yWorld = y;
+			if (paused)
+			{
+				double xWorld = x, yWorld = y;
+				WindowToWorldCoordinates(xWorld, yWorld);
 
-			WindowToWorldCoordinates(xWorld, yWorld);
-
-			if (cm((int)xWorld, (int)yWorld) == UNPOPULATED)
-			{
-				cm.Invert((int)xWorld, (int)yWorld);
-				glutMotionFunc(Mouse::Motion::PopulateCells);
-				glutPostRedisplay();
-			}
-			else if (cm((int)xWorld, (int)yWorld) == POPULATED)
-			{
-				cm.Invert((int)xWorld, (int)yWorld);
-				glutMotionFunc(Mouse::Motion::UnpopulateCells);
-				glutPostRedisplay();
-			}
-			else
-			{
-				int pressedButton = Mouse::ButtonPressCheck(x, WindowHeight - y);
-				if (pressedButton == EXIT_BUTTON)
+				if (cm((int)xWorld, (int)yWorld) == UNPOPULATED)
 				{
-					Draw::exitButtonDown = TRUE;
-					glutPostRedisplay();
+					cm.Invert((int)xWorld, (int)yWorld);
+					glutMotionFunc(Mouse::Motion::PopulateCells);
+					glutPostRedisplay(); return;
 				}
-				else if (pressedButton == PLAY_BUTTON)
+				else if (cm((int)xWorld, (int)yWorld) == POPULATED)
 				{
-					Draw::playButtonDown = TRUE;
-					glutPostRedisplay();
-				}
-				else if (pressedButton == RESET_BUTTON)
-				{
-					Draw::resetButtonDown = TRUE;
-					glutPostRedisplay();
-				}
-				else if (pressedButton == PLUS_BUTTON)
-				{
-					if (delay < 10)
-						delay += 5;
-					else if (delay < 50)
-						delay += 10;
-					else
-						delay += 50;
-				}
-				else if (pressedButton == MINUS_BUTTON)
-				{
-					if (delay > 50)
-						delay -= 50;
-					else if (delay > 10)
-						delay -= 10;
-					else if (delay > 5)
-						delay -= 5;
+					cm.Invert((int)xWorld, (int)yWorld);
+					glutMotionFunc(Mouse::Motion::UnpopulateCells);
+					glutPostRedisplay(); return;
 				}
 			}
+			Mouse::ButtonPressCheck(x, WindowHeight - y);
+			glutPostRedisplay();
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		{
-			if (Draw::playButtonDown)
-			{
-				Draw::playButtonDown = FALSE;
-				glutPostRedisplay();
-				paused = FALSE;
-				timerStart = clock();
-				glutIdleFunc(Run);
-				glutMouseFunc(Mouse::Running);
-			}
-			else if (Draw::exitButtonDown)
-			{
-				Draw::exitButtonDown = FALSE;
-				glutPostRedisplay();
-				exitAutomaton();
-			}
-			else if (Draw::resetButtonDown)
-			{
-				Draw::resetButtonDown = FALSE;
-				cm.Reset();
-				glutPostRedisplay();
-			}
-			else
-			{
-				glutMotionFunc(NULL);
-			}
-		}
-	}
-
-	void Mouse::Running(int button, int state, int x, int y)	//Mouse callback for unpaused CA
-	{
-		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-		{
 			int pressedButton = Mouse::ButtonPressCheck(x, WindowHeight - y);
+			buttons->ReleaseButtons();
+			
 			if (pressedButton == EXIT_BUTTON)
-			{
-				Draw::exitButtonDown = TRUE;
-				glutPostRedisplay();
-			}
+				exitAutomaton();
 			else if (pressedButton == PLAY_BUTTON)
 			{
-				Draw::playButtonDown = TRUE;
-				glutPostRedisplay();
+				if (paused)
+				{
+					paused = false;
+					timerStart = clock();
+					glutIdleFunc(Run);
+				}
+				else
+				{
+					paused = true;
+					glutIdleFunc(NULL);
+				}
 			}
 			else if (pressedButton == RESET_BUTTON)
 			{
-				Draw::resetButtonDown = TRUE;
-				glutPostRedisplay();
+				cm.Reset();
+				paused = true;
+				glutIdleFunc(NULL);
 			}
 			else if (pressedButton == PLUS_BUTTON)
 			{
@@ -425,32 +342,7 @@ namespace ViewAutomaton
 				else if (delay > 5)
 					delay -= 5;
 			}
-		}
-		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-		{
-			if (Draw::playButtonDown)
-			{
-				Draw::playButtonDown = FALSE;
-				paused = TRUE;
-				glutIdleFunc(NULL);
-				glutMouseFunc(Setup);
-				glutPostRedisplay();
-			}
-			else if (Draw::exitButtonDown)
-			{
-				Draw::exitButtonDown = FALSE;
-				glutPostOverlayRedisplay();
-				exitAutomaton();
-			}
-			else if (Draw::resetButtonDown)
-			{
-				Draw::resetButtonDown = FALSE;
-				paused = TRUE;
-				glutIdleFunc(NULL);
-				glutMouseFunc(Setup);
-				cm.Reset();
-				glutPostRedisplay();
-			}
+			glutPostRedisplay();
 		}
 	}
 
@@ -462,71 +354,18 @@ namespace ViewAutomaton
 
 	int Mouse::ButtonPressCheck(int x, int y)		//Check if any buttons were clicked(Uses color picking)
 	{
-		GLubyte pixelColor[3], exitColor = 10, playColor = 20, resetColor = 30, plusColor = 40, minusColor = 50;
-
 		glClear(GL_COLOR_BUFFER_BIT);
 		glPushAttrib(GL_VIEWPORT_BIT);
 
-		glViewport(vp[0] + (GLsizei)(vp[2] * (1 - 0.1526)), vp[1], (GLsizei)(vp[2] * 0.1526), vp[3]);
+		glViewport(sidebarVP[0],sidebarVP[1],sidebarVP[2],sidebarVP[3]);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluOrtho2D(0, 18, 0, 100);
 		glMatrixMode(GL_MODELVIEW);
+		int pressedButton = buttons->PressButton(x, y);
 
-		glColor3ub(exitColor, 0, 0);
-		glRectf(3, 97, 16, 89);
-
-		glPushMatrix();
-		glTranslatef(0, -14, 0);
-		glColor3ub(playColor, 0, 0);
-		glRectf(3, 97, 16, 89);
-		glPopMatrix();
-
-		glPushMatrix();
-		glTranslatef(0, -87, 0);
-		glColor3ub(resetColor, 0, 0);
-		glRectf(3, 97, 16, 89);
-		glPopMatrix();
-
-		glColor3ub(plusColor, 0, 0);
-		glRectf(1, 52, 7, 54);
-		glRectf(3, 50, 5, 56);
-		glEndList();
-
-		glColor3ub(minusColor, 0, 0);
-		glRectf(11, 52, 17, 54);
-
-		glFlush();
-
-		glReadBuffer(GL_BACK);
-		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &pixelColor);
 		glPopAttrib();
-
-		if (pixelColor[0] == exitColor)
-		{
-			return EXIT_BUTTON;
-		}
-		else if (pixelColor[0] == playColor)
-		{
-			return PLAY_BUTTON;
-		}
-		else if (pixelColor[0] == resetColor)
-		{
-			return RESET_BUTTON;
-		}
-		else if (pixelColor[0] == plusColor)
-		{
-			return PLUS_BUTTON;
-		}
-		else if (pixelColor[0] == minusColor)
-		{
-			return MINUS_BUTTON;
-		}
-		else
-		{
-			return -1;
-		}
-
+		return pressedButton;
 	}
 
 	void Mouse::Motion::PopulateCells(int x, int y)
@@ -558,7 +397,6 @@ namespace ViewAutomaton
 			for (int j = 0; j < cm.GridSize(); j++)
 				if (cm.operator()(i, j) == POPULATED)
 				{
-					//glColor3f((rand() % 95 + 5) / 100.0, (rand() % 95 + 5) / 100.0, (rand() % 95 + 5) / 100.0);
 					glPushMatrix();
 					glTranslatef((GLfloat)i, (GLfloat)j, 0);
 					glCallList(cell);
@@ -566,64 +404,11 @@ namespace ViewAutomaton
 				}
 	}
 
-	inline void Draw::ScaleAbout(double x, double y, double xScale, double yScale)	//Used for scaling about a point x,y
-	{
-		glTranslated(x, y, 0);
-		glScaled(xScale, yScale, 0);
-		glTranslated(-x, -y, 0);
-	}
-
 	void Draw::Sidebar()	//Draw the sidebar
 	{
-		if (exitButtonDown)
-		{
-			glPushMatrix();
-			ScaleAbout(9.5, 93, 0.95, 0.95);
-			glCallList(PressedButton);
-			glCallList(exitButtonX);
-			glPopMatrix();
-		}
-		else
-		{
-			glCallList(ReleasedButton);
-			glCallList(exitButtonX);
-		}
-
-		if (playButtonDown)
-		{
-			glPushMatrix();
-			glTranslatef(0, -14, 0);
-			ScaleAbout(9.5, 93, 0.95, 0.95);
-			glCallList(PressedButton);
-			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
-			glPopMatrix();
-		}
-		else
-		{
-			glPushMatrix();
-			glTranslatef(0, -14, 0);
-			glCallList(ReleasedButton);
-			(paused) ? glCallList(playButtonPlay) : glCallList(playButtonPause);
-			glPopMatrix();
-		}
-
-		if (resetButtonDown)
-		{
-			glPushMatrix();
-			glTranslatef(0, -87, 0);
-			ScaleAbout(9.5, 93, 0.95, 0.95);
-			glCallList(PressedButton);
-			tex->DrawTexture(TEX_RESET);
-			glPopMatrix();
-		}
-		else
-		{
-			glPushMatrix();
-			glTranslatef(0, -87, 0);
-			glCallList(ReleasedButton);
-			tex->DrawTexture(TEX_RESET);
-			glPopMatrix();
-		}
+		buttons->DrawButton(EXIT_BUTTON, exitButtonX, NULL);
+		buttons->DrawPlayButton(PLAY_BUTTON, paused);
+		buttons->DrawButton(RESET_BUTTON, TEX_RESET, tex);
 
 		glCallList(plus);
 		glCallList(minus);

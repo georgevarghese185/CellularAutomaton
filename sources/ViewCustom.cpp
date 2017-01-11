@@ -4,11 +4,12 @@ namespace ViewCustom
 {
 	double VRwidth, VRheight;
 	const double WHRatio = 800.0/600.0;
-	GLuint listsBase, continueButtonReleased, continueButtonPressed, backButtonReleased, backButtonPressed, inputBox;
+	GLuint listsBase, inputBox;
 	GLsizei numOfLists;
-	int gotRules, showCursor, Draw::backButtonDown, Draw::continueButtonDown;
+	int gotRules, showCursor;
 	vector<int> GetRules::populationState, GetRules::condition, GetRules::neighbour, GetRules::result;
 	Textures *tex;
+	Buttons *buttons;
 	string input;
 	clock_t startTimer;
 
@@ -25,7 +26,7 @@ namespace ViewCustom
 		Initialize();
 		glutDisplayFunc(Display);
 		glutReshapeFunc(Reshape);
-		glutMouseFunc(Mouse::Mouse);
+		glutMouseFunc(Mouse);
 		glutPostRedisplay();
 		glutReshapeWindow(WindowWidth, WindowHeight);
 		glutIdleFunc(NULL);
@@ -60,142 +61,11 @@ namespace ViewCustom
 		glMatrixMode(GL_MODELVIEW);
 		glClearColor(0.1725f, 0.1725f, 0.1725f, 1.0f);
 
-		gotRules = FALSE; showCursor = FALSE; Draw::backButtonDown = FALSE; Draw::continueButtonDown = FALSE;
-
+		gotRules = 0;
 		GLuint i = 0;
-		numOfLists = 5;
+		numOfLists = 1;
 		listsBase = glGenLists(numOfLists);
-
-		glNewList(continueButtonReleased = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(70, 70, 70);
-		glRectf(22, 32, 60, 39);
-		//left border
-		glColor3ub(55, 55, 55);
-		glBegin(GL_QUADS);
-		glVertex2f(21, 40);
-		glVertex2f(22, 39);
-		glVertex2f(22, 32);
-		glVertex2f(21, 31);
-		//right border
-		glColor3ub(126, 126, 126);
-		glVertex2f(60, 39);
-		glVertex2f(61, 40);
-		glVertex2f(61, 31);
-		glVertex2f(60, 32);
-		//bottom border
-		glColor3ub(35, 35, 35);
-		glVertex2f(22, 32);
-		glVertex2f(60, 32);
-		glVertex2f(61, 31);
-		glVertex2f(21, 31);
-		//top border
-		glColor3ub(156, 156, 156);
-		glVertex2f(21, 40);
-		glVertex2f(61, 40);
-		glVertex2f(60, 39);
-		glVertex2f(22, 39);
-		glEnd();
-		glEndList();
-
-		glNewList(continueButtonPressed = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(61, 61, 61);
-		glRectf(22, 32, 60, 39);
-		//left border
-		glColor3ub(126, 126, 126);
-		glBegin(GL_QUADS);
-		glVertex2f(21, 40);
-		glVertex2f(22, 39);
-		glVertex2f(22, 32);
-		glVertex2f(21, 31);
-		//right border
-		glColor3ub(55, 55, 55);
-		glVertex2f(60, 39);
-		glVertex2f(61, 40);
-		glVertex2f(61, 31);
-		glVertex2f(60, 32);
-		//bottom border
-		glColor3ub(156, 156, 156);
-		glVertex2f(22, 32);
-		glVertex2f(60, 32);
-		glVertex2f(61, 31);
-		glVertex2f(21, 31);
-		//top border
-		glColor3ub(35, 35, 35);
-		glVertex2f(21, 40);
-		glVertex2f(61, 40);
-		glVertex2f(60, 39);
-		glVertex2f(22, 39);
-		glEnd();
-		glEndList();
-
-		glNewList(backButtonPressed = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(61, 61, 61);
-		glRectf(0.5, 52.5, 7.5, 56.5);
-		//left border
-		glColor3ub(126, 126, 126);
-		glBegin(GL_QUADS);
-		glVertex2f(0, 57);
-		glVertex2f(0.5, 56.5);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(0, 52);
-		//right border
-		glColor3ub(55, 55, 55);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(8, 57);
-		glVertex2f(8, 52);
-		glVertex2f(7.5, 52.5);
-		glColor3ub(35, 35, 35);
-		//bottom border
-		glColor3ub(156, 156, 156);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(7.5, 52.5);
-		glVertex2f(8, 52);
-		glVertex2f(0, 52);
-		//top border
-		glColor3ub(35, 35, 35);
-		glVertex2f(0, 57);
-		glVertex2f(8, 57);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(0.5, 56.5);
-		glEnd();
-		glEndList();
-
-		glNewList(backButtonReleased = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(70, 70, 70);
-		glRectf(0.5, 52.5, 7.5, 56.5);
-		//left border
-		glColor3ub(55, 55, 55);
-		glBegin(GL_QUADS);
-		glVertex2f(0, 57);
-		glVertex2f(0.5, 56.5);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(0, 52);
-		//right border
-		glColor3ub(126, 126, 126);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(8, 57);
-		glVertex2f(8, 52);
-		glVertex2f(7.5, 52.5);
-		glColor3ub(35, 35, 35);
-		//bottom border
-		glColor3ub(35, 35, 35);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(7.5, 52.5);
-		glVertex2f(8, 52);
-		glVertex2f(0, 52);
-		//top border
-		glColor3ub(156, 156, 156);
-		glVertex2f(0, 57);
-		glVertex2f(8, 57);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(0.5, 56.5);
-		glEnd();
-		glEndList();
-
+		
 		glNewList(inputBox = listsBase + i++, GL_COMPILE);
 		//white inner of textbox
 		glColor3ub(255, 255, 255);
@@ -212,10 +82,10 @@ namespace ViewCustom
 
 		tex = new Textures(5);
 		tex->LoadTexture(ExecDir + "textures/TEX_B_CONT", 684, 126, TEX_B_CONT);
-		tex->MakeDList(TEX_B_CONT, 22, 32, 60, 39);
+		tex->MakeDList(TEX_B_CONT, 22, 2, 60, 9);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_B_BACK", 140, 80, TEX_B_BACK);
-		tex->MakeDList(TEX_B_BACK, 0.5, 52.5, 7.5, 56.5);
+		tex->MakeDList(TEX_B_BACK, 1, 52.5, 8, 56.5);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_CUST", 810, 375, TEX_CUST);
 		tex->MakeDList(TEX_CUST, 13, 21, 67, 45);
@@ -225,13 +95,24 @@ namespace ViewCustom
 
 		tex->LoadTexture(ExecDir + "textures/TEX_N_EQUALS", 140, 100, TEX_N_EQUALS);
 		tex->MakeDList(TEX_N_EQUALS, 26, 10, 33, 15);
+
+		buttons = new Buttons(2);
+		buttons->MakeButtonGraphic(CONT_BUTTON, 0, 0, 40, 9, 1, 1, 39, 8,
+			Color(61, 61, 61), Color(35, 35, 35), Color(126, 126, 126), Color(156, 156, 156), Color(55, 55, 55),
+			Color(70, 70, 70), Color(156, 156, 156), Color(35, 35, 35), Color(55, 55, 55), Color(126, 126, 126));
+		buttons->MakeButton(CONT_BUTTON, 21, 1, 61, 10, CONT_BUTTON);
+		buttons->MakeButtonGraphic(BACK_BUTTON, 0, 0, 8, 5, 0.5, 0.5, 7.5, 4.5,
+			Color(61, 61, 61), Color(35, 35, 35), Color(126, 126, 126), Color(55, 55, 55), Color(156, 156, 156),
+			Color(70, 70, 70), Color(156, 156, 156), Color(35, 35, 35), Color(55, 55, 55), Color(126, 126, 126));
+		buttons->MakeButton(BACK_BUTTON, 0.5, 52, 8.5, 57, BACK_BUTTON);
 	}
 
 	void Display()
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		Draw::Buttons();
+		buttons->DrawButton(CONT_BUTTON, TEX_B_CONT, tex);
+		buttons->DrawButton(BACK_BUTTON, TEX_B_BACK, tex);
 		tex->DrawTexture(TEX_CUST);
 
 		glutSwapBuffers();
@@ -241,14 +122,15 @@ namespace ViewCustom
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		Draw::Buttons();
+		buttons->DrawButton(CONT_BUTTON, TEX_B_CONT, tex);
+		buttons->DrawButton(BACK_BUTTON, TEX_B_BACK, tex);
+		
+		glPushMatrix(); glTranslatef(0, 1.5, 0);
 		int tn[] = { TEX_GRID_SIZE,TEX_N_EQUALS };
 		tex->DrawTextures(tn, 2);
 		glCallList(inputBox);
-
-		glPushMatrix();
 		glLoadIdentity();
-		glTranslatef(35.4f, 11.5f, 0.0f);
+		glTranslatef(35.4f, 13.0f, 0.0f);
 		glScalef(0.03f, 0.03f, 0.0f);
 		glColor3ub(0, 0, 0);
 		if (!input.empty())
@@ -259,6 +141,7 @@ namespace ViewCustom
 		if (showCursor)
 			glutStrokeCharacter(GLUT_STROKE_ROMAN, '|');
 		glPopMatrix();
+
 
 		glutSwapBuffers();
 	}
@@ -300,6 +183,7 @@ namespace ViewCustom
 		glutDisplayFunc(DummyDisplay);
 		glDeleteLists(listsBase, numOfLists);
 		delete tex;
+		delete buttons;
 		input.clear();
 		GetRules::populationState.clear();
 		GetRules::condition.clear();
@@ -310,78 +194,35 @@ namespace ViewCustom
 		glutKeyboardFunc(NULL);
 	}
 
-	void Mouse::Mouse(int button, int state, int x, int y)
+	void Mouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		{
-			int pressedButton = ButtonPressCheck(x, WindowHeight - y);
-			if (pressedButton == BACK_BUTTON)
-			{
-				Draw::backButtonDown = TRUE;
-				glutPostRedisplay();
-			}
-			if (pressedButton == CONT_BUTTON)
-			{
-				Draw::continueButtonDown = TRUE;
-				glutPostRedisplay();
-			}
+			buttons->PressButton(x, WindowHeight - y);
+			glutPostRedisplay();
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		{
-			if (Draw::backButtonDown)
+			int pressedButton = buttons->PressButton(x, WindowHeight - y);
+			buttons->ReleaseButtons();
+			if (pressedButton == BACK_BUTTON)
 			{
-				Draw::backButtonDown = FALSE;
-				glutPostRedisplay();
 				exitCustom();
 				ViewAutomaton::cm.ClearRules();
 				glutIdleFunc(ViewMainMenu::HandOver);
 			}
-			else if (Draw::continueButtonDown)
+			if (pressedButton == CONT_BUTTON)
 			{
-				Draw::continueButtonDown = FALSE;
-				glutPostRedisplay();
-				if(!gotRules)
+				if (!gotRules)
 					GetRules::Menu();
-				else
+				else if(!input.empty() && atoi(input.c_str())>0)
 				{
 					ViewAutomaton::cm.Initialize(atoi(input.c_str()));
 					exitCustom();
 					glutIdleFunc(ViewAutomaton::HandOver);
 				}
 			}
-		}
-	}
-
-	int Mouse::ButtonPressCheck(int x, int y)
-	{
-		GLubyte pixelColor[3], ContColor = 10, backColor = 20;
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glPushMatrix();
-		glTranslatef(0, -31, 0);
-		Draw::ScaleAbout(41.0f, 35.5f, 0.60f, 0.60f);
-		glColor3ub(ContColor, 0, 0);
-		glRectf(21, 31, 61, 40);
-		glPopMatrix();
-
-		glColor3ub(backColor, 0, 0);
-		glRectf(0.5, 52, 8.5, 57);
-
-		glFlush();
-		glReadBuffer(GL_BACK);
-		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &pixelColor);
-
-		if (pixelColor[0] == ContColor)
-		{
-			return CONT_BUTTON;
-		}
-		else if (pixelColor[0] == backColor)
-		{
-			return BACK_BUTTON;
-		}
-		else
-		{
-			return -1;
+			glutPostRedisplay();
 		}
 	}
 
@@ -392,7 +233,7 @@ namespace ViewCustom
 
 		while (loop==1)
 		{
-			system("cls");
+			std::system("cls");
 			cout << "1. Add New Rule" << endl
 				<< "2. See entered rules" << endl
 				<< "3. Clear all rules" << endl
@@ -410,7 +251,7 @@ namespace ViewCustom
 				if (populationState.size() < 1)
 				{
 					cout << "No rules entered!\n";
-					system("pause");
+					std::system("pause");
 				}
 				else
 					ViewRules();
@@ -419,7 +260,7 @@ namespace ViewCustom
 				if (populationState.size() < 1)
 				{
 					cout << "No rules entered!\n";
-					system("pause");
+					std::system("pause");
 				}
 				else
 					ClearRules();
@@ -428,22 +269,22 @@ namespace ViewCustom
 				if (populationState.size() < 1)
 				{
 					cout<<"No rules entered!\n";
-					system("pause");
+					std::system("pause");
 				}
 				else
 					loop = 0;
 				break;
 			case 5:
-				system("cls");
+				std::system("cls");
 				loop = -1;
 				glutShowWindow();
 				exitCustom();
 				glutIdleFunc(ViewMainMenu::HandOver);
 				break;
 			default:
-				system("cls");
+				std::system("cls");
 				cout << "Incorrect choice\n";
-				system("pause");
+				std::system("pause");
 				break;
 			}
 		}
@@ -453,33 +294,54 @@ namespace ViewCustom
 	void GetRules::AddRule()
 	{
 		string input;
-		int temp, eflag=0;
+		int temp, eflag = 0;
 		while (1)
 		{
-			system("cls");
-			cout << " Format:" << endl << "\n" << "before_state : condition : no_of_neighbours : result_state";
-			cout << "\n[populated|unpopulated] : [less_than|equal|greater_than] : [0-8] : [populated|unpopulated]";
-			cout << "\nExamples:\n\t" << "unpopulated:less_than:4:populated"
-				<< "\nMeans-> All DEAD cells with LESS THAN 4 neighbours will become LIVE";
-			cout << "\n\n\t" << "populated:greater_than|equal:2:unpopulated";
-			cout << "\nMeans-> All LIVE cells with 2 or GREATER THAN 2 neighbours will become DEAD";
-			cout << "\n\n";
-			cout << "before_state: ";
+			std::system("cls");
+			cout << " Format:" << endl << "\n" << "before_state: [live|dead]"
+				<< "\ncondition: [less_than|equal|greater_than],"
+				<< "\nno_of_neighbours: [0-8]"
+				<< "\nresult_state: [live|dead]"
+				<< "\n\nExamples:\n\t" << "(i) dead, less_than, 4, live"
+				<< "\nMeans-> All DEAD cells with LESS THAN 4 neighbours will become LIVE"
+				<< "\n\n\t" << "(ii) live, greater_than|equal, 2, dead"
+				<< "\nMeans-> All LIVE cells with 2 or GREATER THAN 2 neighbours will become DEAD"
+				<< "\n\nEnter Rule (type 'back' to go back)..."
+				<< "\nbefore_state: ";
+			if (result.size() < populationState.size()){
+				cout << (populationState.back()? "live":"dead") << endl; 
+				goto get_condition;
+			}
 			cin >> input;
-			if (!_stricmp(input.c_str(), "unpopulated"))
+			if (!_stricmp(input.c_str(), "back"))
+				break;
+			if (!_stricmp(input.c_str(), "dead"))
 				populationState.push_back(UNPOPULATED);
-			else if (!_stricmp(input.c_str(), "populated"))
+			else if (!_stricmp(input.c_str(), "live"))
 				populationState.push_back(POPULATED);
 			else
 			{
 				cout << "incorrect value\n";
-				system("pause");
+				std::system("pause");
 				continue;
 			}
-
+			
+		get_condition:
 			cout << "condition: ";
+			if (result.size() < condition.size()){
+				input.clear();
+				if (condition.back()&LESS_THAN)input = "less_than|";
+				if (condition.back()&EQUAL_TO)input = input + "equal|";
+				if (condition.back()&GREATER_THAN)input = input + "greater_than|";
+				cout << input.substr(0,input.size()-1) << endl;; goto get_neighbour;
+			}
 			cin >> input;
 			temp = 0; eflag = 0;
+			if (!_stricmp(input.substr(0, 4).c_str(), "back"))
+			{
+				clearLast();
+				break;
+			}
 			for (unsigned int i = 0; i < input.size(); i++)
 			{
 				unsigned int j = i;
@@ -501,34 +363,54 @@ namespace ViewCustom
 			if (eflag)
 			{
 				cout << "incorrect value\n";
-				system("pause");
-				populationState.pop_back();
+				std::system("pause");
 				continue;
 			}
 			else
 				condition.push_back(temp);
-
+			
+		get_neighbour:
 			cout << "no_of_neigbours: ";
-			cin >> temp;
-			if (temp >= 0 && temp <= 8)
+			if (result.size() < neighbour.size()) {
+				cout << neighbour.back() << endl; goto get_result;
+			}
+
+			cin >> input;
+			if (!_stricmp(input.substr(0, 4).c_str(), "back"))
+			{
+				clearLast();
+				break;
+			}
+			temp = atoi(input.c_str());
+			eflag = 0;
+			while (!input.empty()) {
+				if (isdigit(input.back())) input.pop_back();
+				else { eflag = 1; break; }
+			}
+			if (!eflag && temp >= 0 && temp <= 8)
 				neighbour.push_back(temp);
 			else
 			{
-				cout << "incorrect value (should be b/w inclusive of 0 and 8, inclusive)\n";
-				system("pause");
-				populationState.pop_back();
-				condition.pop_back();
+				cout << "incorrect value (should be b/w 0 and 8, inclusive)\n";
+				std::system("pause");
 				continue;
 			}
 
+		get_result:
 			cout << "result_state: ";
+
 			cin >> input;
-			if (!_stricmp(input.c_str(), "unpopulated"))
+			if (!_stricmp(input.substr(0, 4).c_str(), "back"))
+			{
+				clearLast();
+				break;
+			}
+			if (!_stricmp(input.c_str(), "dead"))
 			{
 				result.push_back(UNPOPULATED);
 				break;
 			}
-			else if (!_stricmp(input.c_str(), "populated"))
+			else if (!_stricmp(input.c_str(), "live"))
 			{
 				result.push_back(POPULATED);
 				break;
@@ -536,17 +418,14 @@ namespace ViewCustom
 			else
 			{
 				cout << "incorrect value\n";
-				system("pause");
-				populationState.pop_back();
-				condition.pop_back();
-				neighbour.pop_back();
+				std::system("pause");
 			}
 		}
 	}
 
 	void GetRules::ViewRules()
 	{
-		system("cls");
+		std::system("cls");
 		for (unsigned int i = 0; i < populationState.size(); i++)
 		{
 			cout << i + 1 << ". ";
@@ -577,23 +456,32 @@ namespace ViewCustom
 				cout << "DEAD ";
 			cout << "\n\n";
 		}
-		system("pause");
+		std::system("pause");
 	}
 
 	void GetRules::ClearRules()
 	{
-		system("cls");
+		std::system("cls");
 		populationState.clear();
 		condition.clear();
 		neighbour.clear();
 		result.clear();
 		cout << "Rules Cleared\n";
-		system("pause");
+		std::system("pause");
+	}
+
+	void GetRules::clearLast()
+	{
+		if (populationState.size() > result.size()) populationState.pop_back();
+		else return;
+		if (condition.size() > result.size()) condition.pop_back();
+		else return;
+		if (neighbour.size() > result.size()) neighbour.pop_back();
 	}
 
 	void GetRules::Begin()
 	{
-		system("cls");
+		std::system("cls");
 		for (unsigned int i = 0; i < populationState.size(); i++)
 		{
 			ViewAutomaton::cm.AddRule(populationState[i], condition[i], neighbour[i], result[i]);
@@ -603,50 +491,5 @@ namespace ViewCustom
 		glutIdleFunc(CursorBlink);
 		glutDisplayFunc(DisplayGetSize);
 		gotRules = TRUE;
-	}
-
-	inline void Draw::ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale)
-	{
-		glTranslatef(x, y, 0);
-		glScalef(xScale, yScale, 0);
-		glTranslatef(-x, -y, 0);
-	}
-
-	void Draw::Buttons()
-	{
-		glPushMatrix();
-		glTranslatef(0, -31, 0);
-		ScaleAbout(41.0f, 35.5f, 0.6f, 0.6f);
-		if (Draw::continueButtonDown)
-		{
-			glPushMatrix();
-			ScaleAbout(41.0f, 35.5f, 0.95f, 0.95f);
-			glCallList(continueButtonPressed);
-			tex->DrawTexture(TEX_B_CONT);
-			glPopMatrix();
-		}
-		else
-		{
-			glCallList(continueButtonReleased);
-			tex->DrawTexture(TEX_B_CONT);
-		}
-		glPopMatrix();
-
-		glPushMatrix();
-		glTranslatef(0.5, 0, 0);
-		if (Draw::backButtonDown)
-		{
-			glPushMatrix();
-			ScaleAbout(4.0f, 54.5f, 0.95f, 0.95f);
-			glCallList(backButtonPressed);
-			tex->DrawTexture(TEX_B_BACK);
-			glPopMatrix();
-		}
-		else
-		{
-			glCallList(backButtonReleased);
-			tex->DrawTexture(TEX_B_BACK);
-		}
-		glPopMatrix();
 	}
 }

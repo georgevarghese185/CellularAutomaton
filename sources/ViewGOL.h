@@ -8,6 +8,7 @@
 #include"ViewMainMenu.h"
 #include"ViewAutomaton.h"
 #include"Textures.h"
+#include"Buttons.h"
 using namespace std;
 
 extern string ExecDir;
@@ -18,12 +19,12 @@ namespace ViewGOL
 	
 	extern double VRwidth, VRheight;
 	extern const double WHRatio;
-	extern GLuint listsBase, continueButtonPressed, continueButtonReleased, backButtonPressed, backButtonReleased, inputBox;
-	extern GLsizei numOfLists;
+	extern GLuint inputBox;
 	extern int showCursor;
 	extern string input;
 	extern clock_t startTimer;
 	extern Textures *tex;
+	extern Buttons *buttons;
 
 	void HandOver();
 	void Reshape(int w, int h);
@@ -34,20 +35,7 @@ namespace ViewGOL
 	void Key(unsigned char key, int x, int y);		//For entering grid size
 	void exitGOL();
 
-	namespace Mouse
-	{
-		void Mouse(int button, int state, int x, int y);
-		int ButtonPressCheck(int x, int y);
-	}
-
-	namespace Draw
-	{
-		extern int backButtonDown, continueButtonDown, backButtonDown;
-
-		void Text();
-		inline void ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale);
-		void Buttons();
-	}
+	void Mouse(int button, int state, int x, int y);
 }
 
 #endif

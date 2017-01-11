@@ -4,12 +4,14 @@ namespace ViewDemo
 {
 	double VRwidth, VRheight, px;
 	double const WHRatio = 800.0 / 600.0;
-	GLuint numOfLists, listsBase, grid, cell, buttonReleased, buttonPressed, backButtonPressed, backButtonReleased;
-	int Draw::prevButtonDown, Draw::nextButtonDown, Draw::backButtonDown, Draw::Page, Draw::Page2FirstRun, Draw::Page4FirstRun, Draw::Page5FirstRun;
+	GLuint numOfLists, listsBase, grid, cell;
+	int Draw::Page, Draw::Page2FirstRun, Draw::Page4FirstRun, Draw::Page5FirstRun;
 	Textures *tex;
+	Buttons *buttons;
 	Cell cm;
 	clock_t timerStart;
 
+#define BUTTON 0
 #define PREV_BUTTON 0
 #define NEXT_BUTTON 1
 #define BACK_BUTTON 2
@@ -27,7 +29,7 @@ namespace ViewDemo
 		Initialize();
 		glutReshapeFunc(Reshape);
 		glutDisplayFunc(Display);
-		glutMouseFunc(Mouse::Mouse);
+		glutMouseFunc(Mouse);
 		glutReshapeWindow(WindowWidth, WindowHeight);
 		glutIdleFunc(NULL);
 		MakeGrid();
@@ -64,15 +66,11 @@ namespace ViewDemo
 		glMatrixMode(GL_MODELVIEW);
 		glClearColor(0.1725f, 0.1725f, 0.1725f, 1.0f);
 
-		cm.Initialize(32);
-		Draw::prevButtonDown = FALSE, Draw::nextButtonDown = FALSE, Draw::backButtonDown = FALSE;
-		Draw::Page = 1;
+		cm.Initialize(32); Draw::Page = 1;
 
-		GLuint i;
-		numOfLists = 6;
+		GLuint i=0;
+		numOfLists = 2;
 		listsBase = glGenLists(numOfLists);
-
-		i = 0;
 
 		glNewList(cell = listsBase + i++, GL_COMPILE);
 		glBegin(GL_QUADS);
@@ -83,140 +81,9 @@ namespace ViewDemo
 		glEnd();
 		glEndList();
 
-		glNewList(buttonReleased = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(70, 70, 70);
-		glRectf(2, 38, 13, 45);
-		//left border
-		glColor3ub(55, 55, 55);
-		glBegin(GL_QUADS);
-		glVertex2f(1, 46);
-		glVertex2f(2, 45);
-		glVertex2f(2, 38);
-		glVertex2f(1, 37);
-		//right border
-		glColor3ub(126, 126, 126);
-		glVertex2f(13, 45);
-		glVertex2f(14, 46);
-		glVertex2f(14, 37);
-		glVertex2f(13, 38);
-		//bottom border
-		glColor3ub(35, 35, 35);
-		glVertex2f(2, 38);
-		glVertex2f(13, 38);
-		glVertex2f(14, 37);
-		glVertex2f(1, 37);
-		//top border
-		glColor3ub(156, 156, 156);
-		glVertex2f(1, 46);
-		glVertex2f(14, 46);
-		glVertex2f(13, 45);
-		glVertex2f(2, 45);
-		glEnd();
-		glEndList();
-
-		glNewList(buttonPressed = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(61, 61, 61);
-		glRectf(2, 38, 13, 45);
-		//left border
-		glColor3ub(126, 126, 126);
-		glBegin(GL_QUADS);
-		glVertex2f(1, 46);
-		glVertex2f(2, 45);
-		glVertex2f(2, 38);
-		glVertex2f(1, 37);
-		//right border
-		glColor3ub(55, 55, 55);
-		glVertex2f(13, 45);
-		glVertex2f(14, 46);
-		glVertex2f(14, 37);
-		glVertex2f(13, 38);
-		//bottom border
-		glColor3ub(156, 156, 156);
-		glVertex2f(2, 38);
-		glVertex2f(13, 38);
-		glVertex2f(14, 37);
-		glVertex2f(1, 37);
-		//top border
-		glColor3ub(35, 35, 35);
-		glVertex2f(1, 46);
-		glVertex2f(14, 46);
-		glVertex2f(13, 45);
-		glVertex2f(2, 45);
-		glEnd();
-		glEndList();
-
-		glNewList(backButtonPressed = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(61, 61, 61);
-		glRectf(0.5, 52.5, 7.5, 56.5);
-		//left border
-		glColor3ub(126, 126, 126);
-		glBegin(GL_QUADS);
-		glVertex2f(0, 57);
-		glVertex2f(0.5, 56.5);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(0, 52);
-		//right border
-		glColor3ub(55, 55, 55);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(8, 57);
-		glVertex2f(8, 52);
-		glVertex2f(7.5, 52.5);
-		glColor3ub(35, 35, 35);
-		//bottom border
-		glColor3ub(156, 156, 156);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(7.5, 52.5);
-		glVertex2f(8, 52);
-		glVertex2f(0, 52);
-		//top border
-		glColor3ub(35, 35, 35);
-		glVertex2f(0, 57);
-		glVertex2f(8, 57);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(0.5, 56.5);
-		glEnd();
-		glEndList();
-
-		glNewList(backButtonReleased = listsBase + i++, GL_COMPILE);
-		//button inner
-		glColor3ub(70, 70, 70);
-		glRectf(0.5, 52.5, 7.5, 56.5);
-		//left border
-		glColor3ub(55, 55, 55);
-		glBegin(GL_QUADS);
-		glVertex2f(0, 57);
-		glVertex2f(0.5, 56.5);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(0, 52);
-		//right border
-		glColor3ub(126, 126, 126);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(8, 57);
-		glVertex2f(8, 52);
-		glVertex2f(7.5, 52.5);
-		glColor3ub(35, 35, 35);
-		//bottom border
-		glColor3ub(35, 35, 35);
-		glVertex2f(0.5, 52.5);
-		glVertex2f(7.5, 52.5);
-		glVertex2f(8, 52);
-		glVertex2f(0, 52);
-		//top border
-		glColor3ub(156, 156, 156);
-		glVertex2f(0, 57);
-		glVertex2f(8, 57);
-		glVertex2f(7.5, 56.5);
-		glVertex2f(0.5, 56.5);
-		glEnd();
-		glEndList();
-
 		grid = listsBase + i++;
 
 		tex = new Textures(8);
-
 		tex->LoadTexture(ExecDir + "textures/TEX_D_PAGE1", 966, 364, TEX_D_PAGE1);
 		tex->MakeDList(TEX_D_PAGE1, 6, 1, 75, 27);
 
@@ -236,10 +103,21 @@ namespace ViewDemo
 		tex->MakeDList(TEX_B_PREV, 2, 38, 13, 45);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_B_NEXT", 220, 140, TEX_B_NEXT);
-		tex->MakeDList(TEX_B_NEXT, 2, 38, 13, 45);
+		tex->MakeDList(TEX_B_NEXT, 67, 38, 78, 45);
 
 		tex->LoadTexture(ExecDir + "textures/TEX_B_BACK", 140, 80, TEX_B_BACK);
-		tex->MakeDList(TEX_B_BACK, 0.5, 52.5, 7.5, 56.5);
+		tex->MakeDList(TEX_B_BACK, 1, 52.5, 8, 56.5);
+
+		buttons = new Buttons(3);
+		buttons->MakeButtonGraphic(BUTTON, 0, 0, 13, 9, 1, 1, 12, 8,
+			Color(61, 61, 61), Color(35, 35, 35), Color(126, 126, 126), Color(156, 156, 156), Color(55, 55, 55),
+			Color(70, 70, 70), Color(156, 156, 156), Color(35, 35, 35), Color(55, 55, 55), Color(126, 126, 126));
+		buttons->MakeButtonGraphic(BACK_BUTTON, 0, 0, 8, 5, 0.5, 0.5, 7.5, 4.5,
+			Color(61, 61, 61), Color(35, 35, 35), Color(126, 126, 126), Color(55, 55, 55), Color(156, 156, 156),
+			Color(70, 70, 70), Color(156, 156, 156), Color(35, 35, 35), Color(55, 55, 55), Color(126, 126, 126));
+		buttons->MakeButton(BACK_BUTTON, 0.5, 52, 8.5, 57, BACK_BUTTON);
+		buttons->MakeButton(PREV_BUTTON, 1, 37, 14, 46, BUTTON);
+		buttons->MakeButton(NEXT_BUTTON, 66, 37, 79, 46, BUTTON);
 	}
 
 	void MakeGrid()
@@ -277,7 +155,9 @@ namespace ViewDemo
 		glPopMatrix();
 		Draw::TextBox();
 		Draw::Text();
-		Draw::Buttons();
+		if (Draw::Page != 5) buttons->DrawButton(NEXT_BUTTON, TEX_B_NEXT, tex);
+		if (Draw::Page != 1) buttons->DrawButton(PREV_BUTTON, TEX_B_PREV, tex);
+		buttons->DrawButton(BACK_BUTTON, TEX_B_BACK, tex);
 
 		glutSwapBuffers();
 	}
@@ -290,50 +170,35 @@ namespace ViewDemo
 		glutDisplayFunc(DummyDisplay);
 		glDeleteLists(listsBase, numOfLists);
 		delete tex;
+		delete buttons;
 		cm.CleanUp();
 		glutMouseFunc(NULL);
 	}
 
-	void Mouse::Mouse(int button, int state, int x, int y)
+	void Mouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		{
-			int pressedButton = ButtonPressCheck(x, WindowHeight - y);
-			if (pressedButton == PREV_BUTTON)
-			{
-				Draw::prevButtonDown = TRUE;
-				glutPostRedisplay();
-			}
-			else if (pressedButton == NEXT_BUTTON)
-			{
-				Draw::nextButtonDown = TRUE;
-				glutPostRedisplay();
-			}
-			else if (pressedButton == BACK_BUTTON)
-			{
-				Draw::backButtonDown = TRUE;
-				glutPostRedisplay();
-			}
+			buttons->PressButton(x, WindowHeight - y);
+			glutPostRedisplay();
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		{
-			if (Draw::prevButtonDown)
+			int pressedButton = buttons->PressButton(x, WindowHeight - y);
+			buttons->ReleaseButtons();
+			if (pressedButton == PREV_BUTTON && Draw::Page != 1)
 			{
-				Draw::prevButtonDown = FALSE;
-				glutPostRedisplay();
 				Draw::Page--;
 				if (Draw::Page == 1)
 				{
 					glutIdleFunc(NULL);
 					cm.Reset();
-					glutPostRedisplay();
 				}
 				else if (Draw::Page == 3)
 				{
 					glutIdleFunc(NULL);
 					cm.Reset();
 					cm.ClearRules();
-					glutPostRedisplay();
 					Draw::Page2FirstRun = TRUE;
 					timerStart = clock();
 					glutIdleFunc(Draw::Page2);
@@ -346,15 +211,12 @@ namespace ViewDemo
 					cm.Update(15, 15, POPULATED);
 					cm.AddRule(UNPOPULATED, GREATER_THAN | EQUAL_TO, 1, POPULATED);
 					Draw::Page4FirstRun = TRUE;
-					glutPostRedisplay();
 					timerStart = clock();
 					glutIdleFunc(Draw::Page4);
 				}
 			}
-			else if (Draw::nextButtonDown)
+			else if (pressedButton == NEXT_BUTTON && Draw::Page != 5)
 			{
-				Draw::nextButtonDown = FALSE;
-				glutPostRedisplay();
 				Draw::Page++;
 				if (Draw::Page == 2)
 				{
@@ -369,7 +231,6 @@ namespace ViewDemo
 					cm.Update(15, 15, POPULATED);
 					cm.AddRule(UNPOPULATED, GREATER_THAN | EQUAL_TO, 1, POPULATED);
 					Draw::Page4FirstRun = TRUE;
-					glutPostRedisplay();
 					timerStart = clock();
 					glutIdleFunc(Draw::Page4);
 				}
@@ -387,64 +248,16 @@ namespace ViewDemo
 					cm.AddRule(POPULATED, GREATER_THAN, 3, UNPOPULATED);
 					cm.AddRule(UNPOPULATED, EQUAL_TO, 3, POPULATED);
 					Draw::Page5FirstRun = TRUE;
-					glutPostRedisplay();
 					timerStart = clock();
 					glutIdleFunc(Draw::Page5);
 				}
 			}
-			else if (Draw::backButtonDown)
+			else if (pressedButton == BACK_BUTTON)
 			{
-				Draw::backButtonDown = FALSE;
-				glutPostRedisplay();
 				exitDemo();
 				glutIdleFunc(ViewMainMenu::HandOver);
 			}
-		}
-	}
-	
-	int Mouse::ButtonPressCheck(int x, int y)
-	{
-		GLubyte pixelColor[3], prevColor = 10, nextColor = 20, backColor = 30;
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		if (Draw::Page != 1)
-		{
-			glColor3ub(prevColor, 0, 0);
-			glRectf(1, 14, 37, 46);
-		}
-
-		if (Draw::Page != 5)
-		{
-			glPushMatrix();
-			glTranslatef(65, 0, 0);
-			glColor3ub(nextColor, 0, 0);
-			glRectf(1, 14, 37, 46);
-			glPopMatrix();
-		}
-
-		glColor3ub(backColor, 0, 0);
-		glRectf(0, 54, 8, 59);
-
-		glFlush();
-
-		glReadBuffer(GL_BACK);
-		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &pixelColor);
-
-		if (pixelColor[0] == prevColor)
-		{
-			return PREV_BUTTON;
-		}
-		else if (pixelColor[0] == nextColor)
-		{
-			return NEXT_BUTTON;
-		}
-		else if (pixelColor[0] == backColor)
-		{
-			return BACK_BUTTON;
-		}
-		else
-		{
-			return -1;
+			glutPostRedisplay();
 		}
 	}
 
@@ -524,69 +337,5 @@ namespace ViewDemo
 			tex->DrawTexture(TEX_D_PAGE4);
 		else if (Page == 5)
 			tex->DrawTexture(TEX_D_PAGE5);
-	}
-
-	inline void Draw::ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale)
-	{
-		glTranslatef(x, y, 0);
-		glScalef(xScale, yScale, 0);
-		glTranslatef(-x, -y, 0);
-	}
-
-	void Draw::Buttons()
-	{
-		if (Page != 1)
-		{
-			if (Draw::prevButtonDown)
-			{
-				glPushMatrix();
-				ScaleAbout(7.5f, 41.5f, 0.95f, 0.95f);
-				glCallList(buttonPressed);
-				tex->DrawTexture(TEX_B_PREV);
-				glPopMatrix();
-			}
-			else
-			{
-				glCallList(buttonReleased);
-				tex->DrawTexture(TEX_B_PREV);
-			}
-		}
-
-		if (Page != 5)
-		{
-			glPushMatrix();
-			glTranslatef(65, 0, 0);
-			if (Draw::nextButtonDown)
-			{
-				glPushMatrix();
-				ScaleAbout(7.5f, 41.5f, 0.95f, 0.95f);
-				glCallList(buttonPressed);
-				tex->DrawTexture(TEX_B_NEXT);
-				glPopMatrix();
-			}
-			else
-			{
-				glCallList(buttonReleased);
-				tex->DrawTexture(TEX_B_NEXT);
-			}
-			glPopMatrix();
-		}
-		
-		glPushMatrix();
-		glTranslatef(0, 2, 0);
-		if (Draw::backButtonDown)
-		{
-			glPushMatrix();
-			ScaleAbout(4.0f, 54.5f, 0.95f, 0.95f);
-			glCallList(backButtonPressed);
-			tex->DrawTexture(TEX_B_BACK);
-			glPopMatrix();
-		}
-		else
-		{
-			glCallList(backButtonReleased);
-			tex->DrawTexture(TEX_B_BACK);
-		}
-		glPopMatrix();
 	}
 }

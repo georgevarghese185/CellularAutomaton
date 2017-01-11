@@ -2,9 +2,9 @@
 #include<GL\glut.h>
 #include<math.h>
 
-extern GLint WindowWidth, WindowHeight;
+extern GLsizei WindowWidth, WindowHeight;
 extern double VRwidth, VRheight;
-extern double WidthHeightRatio;
+extern double WHRatio;
 
 void WindowToWorldCoordinates(double &x, double &y);
 

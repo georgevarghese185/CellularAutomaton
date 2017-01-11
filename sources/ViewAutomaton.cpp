@@ -5,17 +5,17 @@ namespace ViewAutomaton
 	GLuint listsBase, gridLineV, gridLineH, cell, exitButtonInner, exitButtonTop, exitButtonBottom, exitButtonLeft, exitButtonRight, exitButtonX, playButtonPlay, playButtonPause;
 	GLsizei numOfLists;
 	int paused, exitButtonBorders[2][2] = { { 3,97 },{ 16,89 } };
-	int Draw::exitButtonDown = FALSE, Draw::playButtonDown = FALSE;
+	int Draw::exitButtonDown = FALSE, Draw::playButtonDown = FALSE, Draw::resetButtonDown = FALSE;
 	clock_t timerStart;
 	double delay;
+	Textures *tex;
 
 	void Initialize()
 	{
 		srand(time(NULL));
 
-		WindowWidth = 590, WindowHeight = 500;
-		WidthHeightRatio = (double)WindowWidth / (double)WindowHeight;
-		glutReshapeWindow(WindowWidth, WindowHeight);
+		WindowWidth = 680, WindowHeight = 576;
+		WHRatio = (double)WindowWidth / (double)WindowHeight;
 
 		VRwidth = (GRID_MAX + (WindowWidth - WindowHeight) / ((double)WindowHeight / (double)GRID_MAX));
 		VRheight = GRID_MAX;
@@ -144,6 +144,20 @@ namespace ViewAutomaton
 		glEnd();
 		glEndList();
 		//last DL (11)
+
+		#define TEX_RESET 0
+
+		tex = new Textures(1);
+
+		tex->LoadTexture(ExecDir + "textures/TEX_RESET.raw", 220, 120, TEX_RESET);
+		glNewList(tex->GetDList(TEX_RESET), GL_COMPILE);
+		glBegin(GL_QUADS);
+		glTexCoord2d(1, 1); glVertex2f(15, 90);
+		glTexCoord2d(1, 0); glVertex2f(15, 96);
+		glTexCoord2d(0, 0); glVertex2f(4, 96);
+		glTexCoord2d(0, 1); glVertex2f(4, 90);
+		glEnd();
+		glEndList();
 	}
 
 	void HandOver()
@@ -156,6 +170,8 @@ namespace ViewAutomaton
 
 		paused = TRUE;	
 		Initialize();
+		glutReshapeWindow(WindowWidth, WindowHeight);
+		glutPositionWindow(10, 10);
 		glutReshapeFunc(Reshape);
 		glutDisplayFunc(Display);
 		glutMouseFunc(Mouse::Setup);
@@ -245,7 +261,6 @@ namespace ViewAutomaton
 
 		if (playButtonDown)
 		{
-			GLint stackSize[20];
 			glPushMatrix();
 			glTranslatef(0, -14, 0);
 
@@ -297,12 +312,64 @@ namespace ViewAutomaton
 
 			glPopMatrix();
 		}
+
+		if (resetButtonDown)
+		{
+			glPushMatrix();
+			glTranslatef(0, -87, 0);
+
+			glColor3ub(222, 222, 222);
+			glCallList(exitButtonInner);
+
+			glTranslatef(9.5, 93, 0);
+			glScalef(0.95, 0.95, 0);
+			glTranslatef(-9.5, -93, 0);
+			tex->DrawTexture(TEX_RESET);
+
+			glColor3ub(195, 195, 195);
+			glCallList(exitButtonTop);
+
+			glColor3ub(245, 245, 245);
+			glCallList(exitButtonBottom);
+
+			glColor3ub(232, 232, 232);
+			glCallList(exitButtonLeft);
+
+			glColor3ub(212, 212, 212);
+			glCallList(exitButtonRight);
+
+			glPopMatrix();
+		}
+		else
+		{
+			glPushMatrix();
+			glTranslatef(0, -87, 0);
+
+			glColor3ub(238, 238, 238);
+			glCallList(exitButtonInner);
+
+			tex->DrawTexture(TEX_RESET);
+
+			glColor3ub(240, 240, 240);
+			glCallList(exitButtonTop);
+
+			glColor3ub(197, 197, 197);
+			glCallList(exitButtonBottom);
+
+			glColor3ub(209, 209, 209);
+			glCallList(exitButtonLeft);
+
+			glColor3ub(235, 235, 235);
+			glCallList(exitButtonRight);
+
+			glPopMatrix();
+		}
 	}
 
 	int ButtonPressCheck(int x, int y)
 	{
 		GLint viewport[4];
-		GLubyte pixelColor[3], exitColor = 10, playColor = 20;
+		GLubyte pixelColor[3], exitColor = 10, playColor = 20, resetColor = 30;
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		glPushAttrib(GL_VIEWPORT_BIT);
@@ -322,6 +389,12 @@ namespace ViewAutomaton
 		glColor3ub(playColor, 0, 0);
 		glRectf(exitButtonBorders[0][0], exitButtonBorders[0][1], exitButtonBorders[1][0], exitButtonBorders[1][1]);
 		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(0, -87, 0);
+		glColor3ub(resetColor, 0, 0);
+		glRectf(exitButtonBorders[0][0], exitButtonBorders[0][1], exitButtonBorders[1][0], exitButtonBorders[1][1]);
+		glPopMatrix();
 		
 		glFlush();
 
@@ -336,6 +409,10 @@ namespace ViewAutomaton
 		else if (pixelColor[0] == playColor)
 		{
 			return PLAY_BUTTON;
+		}
+		else if (pixelColor[0] == resetColor)
+		{
+			return RESET_BUTTON;
 		}
 		else
 		{
@@ -371,9 +448,12 @@ namespace ViewAutomaton
 	{
 		glutPostRedisplay();
 		glDeleteLists(listsBase, numOfLists);
+		glutIdleFunc(NULL);
 		glutMouseFunc(NULL);
 		glutMotionFunc(NULL);
 		glutReshapeFunc(NULL);
+		tex->~Textures();
+		CM.CleanUp();
 		glutIdleFunc(ViewStart::HandOver);
 	}
 
@@ -411,6 +491,11 @@ namespace ViewAutomaton
 					Draw::playButtonDown = TRUE;
 					glutPostRedisplay();
 				}
+				else if (pressedButton == RESET_BUTTON)
+				{
+					Draw::resetButtonDown = TRUE;
+					glutPostRedisplay();
+				}
 			}
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
@@ -427,6 +512,12 @@ namespace ViewAutomaton
 			{
 				Draw::exitButtonDown = FALSE;
 				exitAutomaton();
+			}
+			else if (Draw::resetButtonDown)
+			{
+				Draw::resetButtonDown = FALSE;
+				CM.Reset();
+				glutPostRedisplay();
 			}
 			else
 			{
@@ -449,6 +540,12 @@ namespace ViewAutomaton
 			else if (pressedButton == PLAY_BUTTON)
 			{
 				Draw::playButtonDown = TRUE;
+				glutPostRedisplay();
+			}
+			else if (pressedButton == RESET_BUTTON)
+			{
+				Draw::resetButtonDown = TRUE;
+				glutPostRedisplay();
 			}
 		}
 		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
@@ -459,11 +556,21 @@ namespace ViewAutomaton
 				paused = TRUE;
 				glutIdleFunc(NULL);
 				glutMouseFunc(Setup);
+				glutPostRedisplay();
 			}
 			else if (Draw::exitButtonDown)
 			{
 				Draw::exitButtonDown = FALSE;
 				exitAutomaton();
+			}
+			else if (Draw::resetButtonDown)
+			{
+				Draw::resetButtonDown = FALSE;
+				paused = TRUE;
+				glutIdleFunc(NULL);
+				glutMouseFunc(Setup);
+				CM.Reset();
+				glutPostRedisplay();
 			}
 		}
 	}

@@ -14,7 +14,9 @@ void CellMap::Initialize(int size)
 
 int CellMap::operator() (int x, int y)
 {
-	if (InBounds(x, y))
+	if (!_cellMap)
+		return -1;
+	else if (InBounds(x, y))
 		return _cellMap[x][y];
 	else
 		return -1;
@@ -68,9 +70,17 @@ int CellMap::InBounds(int x, int y)
 		return FALSE;
 }
 
-CellMap::~CellMap()
+void CellMap::Reset()
+{
+	for (int i = 0; i < GRID_MAX; i++)
+		for (int j = 0; j < GRID_MAX; j++)
+			_cellMap[i][j] = UNPOPULATED;
+}
+
+void CellMap::CleanUp()
 {
 	for (int i = 0; i < GRID_MAX; i++)
 		delete[] _cellMap[i];
-	delete _cellMap;
+	delete[] _cellMap;
+	_cellMap = NULL;
 }

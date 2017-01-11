@@ -33,7 +33,9 @@ public:
 
 	int InBounds(int x, int y);
 
-	~CellMap();
+	void Reset();
+
+	void CleanUp();
 };
 
 extern CellMap CM;

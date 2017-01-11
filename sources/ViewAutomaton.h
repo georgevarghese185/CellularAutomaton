@@ -13,6 +13,8 @@ namespace ViewAutomaton		//Using a namespace to group together Automaton View fu
 {
 	extern int paused, gridLineV, gridLineH, cell, startButton, playSymbol, pauseSymbol;
 	extern float barX0, barY0, barX1, barY1, barWidth, barHeight, startBorder[4][2], startOffsetX, startOffsetY;
+	extern clock_t timerStart;
+	extern double delay;
 
 	void HandOver();		//Recieves control of display
 	

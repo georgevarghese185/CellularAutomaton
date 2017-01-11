@@ -13,8 +13,9 @@ class CellMap
 
 {
 	int **_cellMap;
-	vector<int> _updateList;
+	
 public:
+	vector<int> _updateList;
 
 	void Initialize(int size);
 

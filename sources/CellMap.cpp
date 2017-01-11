@@ -43,6 +43,7 @@ void CellMap::Set(int x, int y, int populationType)
 
 void CellMap::Update()
 {
+
 	for (int i = 0; i < _updateList.size(); i += 3)
 		_cellMap[_updateList[i]][_updateList[i + 1]] = _updateList[i + 2];
 	_updateList.clear();

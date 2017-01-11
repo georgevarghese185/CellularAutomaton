@@ -4,11 +4,13 @@ namespace ViewAutomaton
 {
 	int paused, gridLineV, gridLineH, cell, startButton, playSymbol, pauseSymbol;
 	float barX0, barY0, barX1, barY1, barWidth, barHeight, startBorder[4][2], startOffsetX, startOffsetY;
-
+	clock_t timerStart;
+	double delay;
 
 	void Initialize()
 	{
 		int i;
+		srand(time(NULL));			//For any random event to be implemented/tested
 
 		WindowWidth = 590, WindowHeight = 500;								//From "WindowWorldGlobals.h" Set default width and height. (500x500 for cell grid, 90 extra pixels wide for sidebar)
 		WidthHeightRatio = (double)WindowWidth / (double)WindowHeight;		//From "WindowWorldGlobals.h" used for reshaping and coordinate calculations
@@ -96,15 +98,19 @@ namespace ViewAutomaton
 
 	void HandOver()
 	{
+		system("cls");
 		cout << "Enter Sqaure Grid Size: ";		//Get grid size from user
 		cin >> GRID_MAX;
+		cout << "Enter delay(in seconds): ";
+		cin >> delay;
 
 		paused = TRUE;	//initially, Automaton not running
-		glutCreateWindow("Cellular Automaton 1.2");
 		Initialize();
 		glutReshapeFunc(Reshape);
 		glutDisplayFunc(Display);
 		glutMouseFunc(Mouse::Setup);
+		glutIdleFunc(NULL);
+		glutShowWindow();
 	}
 
 	void Display()
@@ -125,6 +131,7 @@ namespace ViewAutomaton
 		if (StartButtonPressed(x, y))
 		{
 			paused = FALSE;
+			timerStart = clock();
 			glutIdleFunc(Run);	//Starts processing automaton's state changes during idle time.
 			glutMouseFunc(Mouse::Running);
 		}
@@ -140,21 +147,24 @@ namespace ViewAutomaton
 
 	void Run()
 	{
-		Rule gameOfLife1(POPULATED, LESS_THAN, 2, UNPOPULATED);
-		Rule gameOfLife2(POPULATED, GREATER_THAN, 3, UNPOPULATED);
-		Rule gameOfLife3(UNPOPULATED, EQUAL_TO, 3, POPULATED);
-		int i, j;
-		Sleep(100);
-		CM.Update();
-		glutPostRedisplay();
-		for (i = 0; i < GRID_MAX; i++)
+		if ((double)(clock() - timerStart) / CLOCKS_PER_SEC >= delay)
 		{
-			for (j = 0; j < GRID_MAX; j++)
+			timerStart = clock();
+			glutPostRedisplay();
+			Rule gameOfLife1(POPULATED, LESS_THAN, 2, UNPOPULATED);
+			Rule gameOfLife2(POPULATED, GREATER_THAN, 3, UNPOPULATED);
+			Rule gameOfLife3(UNPOPULATED, EQUAL_TO, 3, POPULATED);
+			int i, j;
+			for (i = 0; i < GRID_MAX; i++)
 			{
-				gameOfLife1.AppyRule(i, j);
-				gameOfLife2.AppyRule(i, j);
-				gameOfLife3.AppyRule(i, j);
+				for (j = 0; j < GRID_MAX; j++)
+				{
+					gameOfLife1.AppyRule(i, j);
+					gameOfLife2.AppyRule(i, j);
+					gameOfLife3.AppyRule(i, j);
+				}
 			}
+			CM.Update();
 		}
 	}
 

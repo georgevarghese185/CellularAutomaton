@@ -1,6 +1,6 @@
 #include"Textures.h"
 
-Textures::Textures(int numOfTextures)
+Textures::Textures(int numOfTextures)		//constructor. allocates "numOfTextures" elements in both arrays.
 {
 	if (numOfTextures <= 0)
 	{
@@ -16,14 +16,15 @@ Textures::Textures(int numOfTextures)
 		_dLists[i] = _dLists[0] + i;
 }
 
-int Textures::LoadTexture(string filePath, int width, int height, int texName)
-{	/*	Most of this code including comments was taken from: https://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures
+void Textures::LoadTexture(string filePath, int width, int height, int texName)		//Load raw image file
+{	/*	Most of this code including comments were taken from: https://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures
 		Special thanks to the various contributers of OpenGL Programming Tutorials on wikibooks.org
 	*/
 
-	if (texName >= _numOfTextures && texName<0)
+	if (texName >= _numOfTextures && texName<0)		
 	{
-		cout << "LoadTexture: invalid texName" << endl;
+		cout << "invalid texture name" << endl;
+		system("pause");
 		exit(1);
 	}
 	unsigned char *data;
@@ -33,12 +34,14 @@ int Textures::LoadTexture(string filePath, int width, int height, int texName)
 	file = fopen(filePath.c_str(), "rb");
 	if (file == NULL)
 	{
-		cout << "LoadTexture: file==NULL" << endl;
+		cout << "Error: Could not locate texture file \"" <<filePath.c_str() << "\"" << endl;
+		cout << "\n\nMake sure the \"textures\" folder is present in the same directory as \"CA3.0.exe\"" << endl;
+		system("pause");
 		exit(1);
 	}
 
 	// allocate buffer
-	data = new unsigned char[width * height * 4];//(unsigned char*)malloc(width * height * 4);
+	data = new unsigned char[width * height * 4];
 
 	// read texture data
 	fread(data, width * height * 4, 1, file);
@@ -50,38 +53,29 @@ int Textures::LoadTexture(string filePath, int width, int height, int texName)
 	// select modulate to mix texture with color for shading
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-	/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_DECAL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_DECAL);*/
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-
-	//// when texture area is small, bilinear filter the closest mipmap
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	//// when texture area is large, bilinear filter the first mipmap
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// texture should tile
-
-	// build our texture mipmaps
-	/*gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);*/
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	// free buffer
-	delete[] data;//free(data);
-
-	return TRUE;
+	delete[] data;
 }
 
-GLuint Textures::GetDList(int name)
+void Textures::MakeDList(int texName, GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)	//Make a display list for the texture _textures[texName]
 {
-	return _dLists[name];
+	glNewList(_dLists[texName], GL_COMPILE);
+	glBegin(GL_QUADS);
+	glTexCoord2d(1, 1); glVertex2f(x2, y1);
+	glTexCoord2d(1, 0); glVertex2f(x2, y2);
+	glTexCoord2d(0, 0); glVertex2f(x1, y2);
+	glTexCoord2d(0, 1); glVertex2f(x1, y1);
+	glEnd();
+	glEndList();
 }
 
-void Textures::DrawTexture(int texName)
+void Textures::DrawTexture(int texName)		//calls display list for texture
 {
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
@@ -94,11 +88,12 @@ void Textures::DrawTexture(int texName)
 	glDisable(GL_TEXTURE_2D);
 }
 
-void Textures::DrawTextures(int texNames[], int n)
+void Textures::DrawTextures(int *texNames, int n)	//for calling multiple textures. the texture numbers are passed through array.
 {
 	if (n <= 0 || n > _numOfTextures)
 	{
 		cout << "Textures::DrawTextures: invalid n value" << endl;
+		system("pause");
 		exit(1);
 	}
 	glEnable(GL_TEXTURE_2D);
@@ -115,7 +110,7 @@ void Textures::DrawTextures(int texNames[], int n)
 	glDisable(GL_TEXTURE_2D);
 }
 
-Textures::~Textures()
+Textures::~Textures()	//Deletes display lists, textures and arrays.
 {
 	glDeleteTextures(_numOfTextures, _textures);
 	delete[] _textures;

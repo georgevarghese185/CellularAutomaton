@@ -1,23 +1,28 @@
-#ifndef __VIEWSTART_H_INCLUDED
-#define __VIEWSTART_H_INCLUDED
+#ifndef __VIEWGOL_H_INCLUDED
+#define __VIEWGOL_H_INCLUDED
 
 #include<GL\freeglut.h>
+#include<string>
+#include<ctime>
+#include<iostream>
 #include"ViewMainMenu.h"
+#include"ViewAutomaton.h"
 #include"Textures.h"
-#include"TextManip.h"
-
 using namespace std;
+
 extern string ExecDir;
 extern GLsizei WindowWidth, WindowHeight;
 
-namespace ViewStart
+namespace ViewGOL
 {
 	
 	extern double VRwidth, VRheight;
 	extern const double WHRatio;
-	extern GLint vp[4];
-	extern GLuint listsBase, startButtonReleased, startButtonPressed;
+	extern GLuint listsBase, continueButtonPressed, continueButtonReleased, backButtonPressed, backButtonReleased, inputBox;
 	extern GLsizei numOfLists;
+	extern int showCursor;
+	extern string input;
+	extern clock_t startTimer;
 	extern Textures *tex;
 
 	void HandOver();
@@ -25,7 +30,9 @@ namespace ViewStart
 	void Initialize();
 	void Display();
 	void DummyDisplay();
-	void exitStart();
+	void CursorBlink();
+	void Key(unsigned char key, int x, int y);		//For entering grid size
+	void exitGOL();
 
 	namespace Mouse
 	{
@@ -35,11 +42,11 @@ namespace ViewStart
 
 	namespace Draw
 	{
-		extern int startButtonDown;
+		extern int backButtonDown, continueButtonDown, backButtonDown;
 
+		void Text();
 		inline void ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale);
-		void text();
-		void StartButton();
+		void Buttons();
 	}
 }
 

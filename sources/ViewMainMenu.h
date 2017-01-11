@@ -1,22 +1,21 @@
-#ifndef __VIEWSTART_H_INCLUDED
-#define __VIEWSTART_H_INCLUDED
+#ifndef __VIEWMAINMENU_H_INCLUDED
+#define __VIEWMAINMENU_H_INCLUDED
 
 #include<GL\freeglut.h>
-#include"ViewMainMenu.h"
+#include"ViewStart.h"
+#include"ViewDemo.h"
+#include"ViewGOL.h"
+#include"ViewCustom.h"
 #include"Textures.h"
-#include"TextManip.h"
 
-using namespace std;
 extern string ExecDir;
 extern GLsizei WindowWidth, WindowHeight;
 
-namespace ViewStart
+namespace ViewMainMenu
 {
-	
 	extern double VRwidth, VRheight;
 	extern const double WHRatio;
-	extern GLint vp[4];
-	extern GLuint listsBase, startButtonReleased, startButtonPressed;
+	extern GLuint listsBase, buttonPressed, buttonReleased, backButtonPressed, backButtonReleased;
 	extern GLsizei numOfLists;
 	extern Textures *tex;
 
@@ -25,8 +24,8 @@ namespace ViewStart
 	void Initialize();
 	void Display();
 	void DummyDisplay();
-	void exitStart();
-
+	void exitMainMenu();
+	
 	namespace Mouse
 	{
 		void Mouse(int button, int state, int x, int y);
@@ -35,11 +34,10 @@ namespace ViewStart
 
 	namespace Draw
 	{
-		extern int startButtonDown;
+		extern int CAPreButtonDown, CACustButtonDown, demoButtonDown, backButtonDown;
 
 		inline void ScaleAbout(GLfloat x, GLfloat y, GLfloat xScale, GLfloat yScale);
-		void text();
-		void StartButton();
+		void Buttons();
 	}
 }
 

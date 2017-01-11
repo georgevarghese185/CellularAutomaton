@@ -1,32 +1,31 @@
 #include<GL\freeglut.h>
-#include"ViewAutomaton.h"	//Holds Automaton View Mode
+#include<string>
 #include"ViewStart.h"
 
-int MainWindow;
-string ExecDir;
+using namespace std;
+
+GLsizei WindowWidth, WindowHeight;		//global variables for width and height
+string ExecDir;							//global variable. holds current directory of .exe
 
 int main(int argc, char** argv)
-
 {
-	ExecDir = argv[0];
+	ExecDir = argv[0];					//initially, path to .exe stored in ExecDir
 	while (1)
 	{
-		if (ExecDir.back() == '\\' || ExecDir.back() == '/')
-			break;
+		if (ExecDir.back() == '\\' || ExecDir.back() == '/')	//starting from the end of .exe's path, find the first '/'. that gives
+			break;												//us the current directory's path
 		else
 			ExecDir.pop_back();
 	}
 
-	glutInit(&argc, argv);							//
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);	//Initializing
-	
-	MainWindow=glutCreateWindow("Cellular Automaton 2.1");
-	
-	glutHideWindow();
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutCreateWindow("Cellular Automaton 3.0");
+	WindowWidth = 800; WindowHeight = 600;
+	glutPositionWindow(10, 10);
 
-	ViewStart::HandOver();				//Handover Control to Automaton View
+	ViewStart::HandOver();										//Hand over control to ViewStart.
 
-	glutMainLoop();									//Loop event.
-
+	glutMainLoop();
 	return 0;
 }

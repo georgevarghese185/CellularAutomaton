@@ -14,7 +14,7 @@
 
 using namespace std;
 
-int GRID_MAX,CApaused=1;
+int GRID_MAX, CApaused = 1;
 GLint WindowWidth = 590, WindowHeight = 500;
 double WidthHeightRatio = (double)WindowWidth / (double)WindowHeight;
 double VRwidth, VRheight;
@@ -23,12 +23,12 @@ float startButton[4];
 class CellMap
 
 {
-	int **_cellMap;		
+	int **_cellMap;
 	vector<int> _updateList;
 public:
 
 	void Initialize(int size)
-	
+
 	{
 		_cellMap = new int*[size];
 		for (int i = 0; i < GRID_MAX; i++)
@@ -36,16 +36,30 @@ public:
 	}
 
 	int operator() (int x, int y)
-	
+
 	{
-		if (InBounds(x,y))
+		if (InBounds(x, y))
 			return _cellMap[x][y];
 		else
-			return 0;		
+			return -1;
+	}
+
+	int Neighbourhood(int x, int y)
+	{
+		return(
+			(InBounds(x - 1, y - 1) ? CM(x - 1, y - 1) : 0)
+			+ (InBounds(x - 1, y) ? CM(x - 1, y) : 0)
+			+ (InBounds(x - 1, y + 1) ? CM(x - 1, y + 1) : 0)
+			+ (InBounds(x, y - 1) ? CM(x, y - 1) : 0)
+			+ (InBounds(x, y + 1) ? CM(x, y + 1) : 0)
+			+ (InBounds(x + 1, y - 1) ? CM(x + 1, y - 1) : 0)
+			+ (InBounds(x + 1, y) ? CM(x + 1, y) : 0)
+			+ (InBounds(x + 1, y + 1) ? CM(x + 1, y + 1) : 0)
+			);
 	}
 
 	void Set(int x, int y, int populationType)
-	
+
 	{
 		_updateList.push_back(x);
 		_updateList.push_back(y);
@@ -54,20 +68,21 @@ public:
 
 	void Update()
 	{
-		for (int i = 0; i < _updateList.size(); i+=3)
+		for (int i = 0; i < _updateList.size(); i += 3)
 			_cellMap[_updateList[i]][_updateList[i + 1]] = _updateList[i + 2];
 		_updateList.clear();
 	}
 
 	void Update(int x, int y, int populationState)
 	{
+		if (InBounds(x, y))
 			_cellMap[x][y] = populationState;
 	}
 
 	void invert(int x, int y)
-	
+
 	{
-		_cellMap[x][y] = (_cellMap[x][y]==POPULATED) ? UNPOPULATED : POPULATED;
+		_cellMap[x][y] = (_cellMap[x][y] == POPULATED) ? UNPOPULATED : POPULATED;
 	}
 
 	int InBounds(int x, int y)
@@ -79,37 +94,36 @@ public:
 	}
 
 	~CellMap()
-	
+
 	{
 		for (int i = 0; i < GRID_MAX; i++)
 			delete[] _cellMap[i];
 		delete _cellMap;
 	}
-}cm;
+}CM;
 
 class Rule
 {
 	int _populationState, _conditionType, _neighbourCount, _result;
 
-public :
+public:
 	Rule(int populationState, int conditionType, int neighbourCount, int result)
-	
+
 	{
 		_populationState = populationState;
 		_neighbourCount = neighbourCount;
 		_conditionType = conditionType;
 		_result = result;
 	}
-	
+
 	void AppyRule(int x, int y)
-	
+
 	{
-		if (cm(x,y) == _populationState)
+		if (CM(x, y) == _populationState)
 		{
-			int c=0;
-			int count = cm(x - 1, y - 1) + cm(x - 1, y) + cm(x - 1, y + 1) 
-				+ cm(x, y - 1) + cm(x, y + 1) + cm(x + 1, y - 1) + cm(x + 1, y) + cm(x + 1, y + 1);	
-			
+			int c = 0;
+			int count = CM.Neighbourhood(x, y);
+
 			if (count < _neighbourCount)
 				c = c | LESS_THAN;
 			if (count == _neighbourCount)
@@ -118,176 +132,219 @@ public :
 				c = c | GREATER_THAN;
 
 			if (c == _conditionType)
-				cm.Set(x, y, _result);
+				CM.Set(x, y, _result);
 		}
 	}
 };
 
+void Reshape(int, int);
+void WindowToWorldCoordinates(double &x, double &y);
 
-void Initialize();
-void DrawGrid();
-void DisplayCellAutomataPaused();
-void FillCells();
-void DrawStartButton();
-void MouseSetupClick(int,int,int,int);
-void MousePopulateCells(int, int);
-void MouseUnpopulateCells(int, int);
-void AutomataButtonPress(double, double);
-void StartAutomata();
-void Reshape(int,int);
-void WindowToCellCoordinates(double &x, double &y);
-
-
-int main(int argc, char** argv)
-
+class ViewAutomaton
 {
-	srand(time(NULL));
-	cout << "Enter Sqaure Grid Size: ";
-	cin >> GRID_MAX;
-	VRwidth = (GRID_MAX + (WindowWidth-WindowHeight) / ((double)WindowHeight / (double)GRID_MAX));
-	VRheight = GRID_MAX;
-	cm.Initialize(GRID_MAX);
-
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(WindowWidth, WindowHeight);
-	glutCreateWindow("Cellular Automaton 1.0");
-	
-	Initialize();
-	glutDisplayFunc(DisplayCellAutomataPaused);
-	glutReshapeFunc(Reshape);
-	glutMouseFunc(MouseSetupClick);
-	
-	glutMainLoop();
-
-	return 0;
-}
+	static int _paused, _gridLineV, _gridLineH, _cell, _startButton, _playSymbol, _pauseSymbol;
+	static float _barX0, _barY0, _barX1, _barY1, _barWidth, _barHeight, _startBorder[4][2], _startOffsetX, _startOffsetY;
 
 
-void Initialize()
-
-{
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0, VRwidth, 0, VRheight);
-	glMatrixMode(GL_MODELVIEW);
-	glClearColor(1, 1, 1, 1);
-}
-
-
-void MouseSetupClick(int button, int state, int x, int y)
-
-{
-	int i, j;
-	double xWorld=x, yWorld=y;
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	static void Initialize()
 	{
-		WindowToCellCoordinates(xWorld, yWorld);
-		if (cm.InBounds(xWorld, yWorld))
+		int i;
+
+		VRwidth = (GRID_MAX + (WindowWidth - WindowHeight) / ((double)WindowHeight / (double)GRID_MAX));
+		VRheight = GRID_MAX;
+		CM.Initialize(GRID_MAX);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(0, VRwidth, 0, VRheight);
+		glMatrixMode(GL_MODELVIEW);
+		glClearColor(1, 1, 1, 1);
+
+		_barX0 = GRID_MAX;
+		_barX1 = VRwidth;
+		_barY0 = 0;
+		_barY1 = VRheight;
+		_barWidth = _barX1 - _barX0;
+		_barHeight = _barY1 - _barY0;
+
+		_startBorder[0][0] = _barX0 + 0.05 *_barWidth;
+		_startBorder[0][1] = _barY0 + 0.9 *_barHeight;
+		_startBorder[1][0] = _barX0 + 0.95 *_barWidth;
+		_startBorder[1][1] = _barY0 + 0.9 *_barHeight;
+		_startBorder[2][0] = _barX0 + 0.95 *_barWidth;
+		_startBorder[2][1] = _barY0 + 0.8 *_barHeight;
+		_startBorder[3][0] = _barX0 + 0.05 *_barWidth;
+		_startBorder[3][1] = _barY0 + 0.8 *_barHeight;
+		int startLength = _startBorder[1][0] - _startBorder[0][0], startHeight = _startBorder[1][1] - _startBorder[2][1];
+
+		int startBorderLength = _startBorder[1][0] - _startBorder[0][0];
+		int startBorderHeight = _startBorder[1][1] - _startBorder[2][1];
+		_startOffsetX = startBorderLength * 0.1 / 2;
+		_startOffsetY = startBorderHeight * 0.1 / 2;
+		_startOffsetX = _startBorder[3][0] - 0.9*_startBorder[3][0] + _startOffsetX;
+		_startOffsetY = _startBorder[3][1] - 0.9*_startBorder[3][1] + _startOffsetY;
+
+		glNewList(_gridLineV = glGenLists(1), GL_COMPILE);
+		glBegin(GL_LINES);
+		glVertex2f(0, 0);
+		glVertex2f(0, GRID_MAX);
+		glEnd();
+		glEndList();
+
+		glNewList(_gridLineH = glGenLists(1), GL_COMPILE);
+		glBegin(GL_LINES);
+		glVertex2f(0, 0);
+		glVertex2f(GRID_MAX, 0);
+		glEnd();
+		glEndList();
+
+		glNewList(_cell = glGenLists(1), GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(0, 0);
+		glVertex2f(1, 0);
+		glVertex2f(1, 1);
+		glVertex2f(0, 1);
+		glEnd();
+		glEndList();
+
+		glNewList(_startButton = glGenLists(1), GL_COMPILE);
+		glBegin(GL_QUADS);
+		for (i = 0; i < 4; i++) glVertex2fv(_startBorder[i]);
+		glEnd();
+		glEndList();
+
+		glNewList(_playSymbol = glGenLists(1), GL_COMPILE);
+		glBegin(GL_TRIANGLES);
+		glVertex2f(_startBorder[0][0] + 0.2*startLength, _startBorder[0][1] - 0.05*startHeight);
+		glVertex2f(_startBorder[3][0] + 0.2*startLength, _startBorder[3][1] + 0.05*startHeight);
+		glVertex2f(_startBorder[1][0] - 0.2*startLength, _startBorder[3][1] + 0.5*startHeight);
+		glEnd();
+		glEndList();
+
+		glNewList(_pauseSymbol = glGenLists(1), GL_COMPILE);
+		glBegin(GL_QUADS);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.3, _startBorder[0][1] - startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.45, _startBorder[0][1] - startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.45, _startBorder[2][1] + startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.3, _startBorder[2][1] + startBorderHeight * 0.1);
+
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.6, _startBorder[0][1] - startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.75, _startBorder[0][1] - startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.75, _startBorder[2][1] + startBorderHeight * 0.1);
+		glVertex2f(_startBorder[0][0] + startBorderLength * 0.6, _startBorder[2][1] + startBorderHeight * 0.1);
+		glEnd();
+		glEndList();
+	}
+
+
+public:
+
+	static void HandOver()
+	{
+		_paused = TRUE;
+		Initialize();
+		glutDisplayFunc(Display);
+		glutMouseFunc(MouseSetup);
+	}
+
+
+	static void Display()
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		DrawFilledCells();
+
+		DrawGrid();
+
+		DrawStartButton();
+
+		glFlush();
+	}
+
+
+	static void MouseSetup(int button, int state, int x, int y)
+	{
+		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		{
+			int i, j;
+			double xWorld = x, yWorld = y;
 
-			if (cm(xWorld, yWorld) == UNPOPULATED)
-				glutMotionFunc(MousePopulateCells);
+			WindowToWorldCoordinates(xWorld, yWorld);
+
+			if (CM(xWorld, yWorld) == UNPOPULATED)
+			{
+				CM.invert(xWorld, yWorld);
+				glutMotionFunc(MouseMotionPopulateCells);
+				glutPostRedisplay();
+			}
+			else if (CM(xWorld, yWorld) == POPULATED)
+			{
+				CM.invert(xWorld, yWorld);
+				glutMotionFunc(MouseMotionUnpopulateCells);
+				glutPostRedisplay();
+			}
 			else
-				glutMotionFunc(MouseUnpopulateCells);
-			cm.invert(xWorld, yWorld);
-			glutPostRedisplay();
+				ButtonPressCheck(xWorld, yWorld);
 		}
-		else
-			AutomataButtonPress(xWorld, yWorld);
+		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+		{
+			glutMotionFunc(NULL);
+		}
 	}
-}
 
 
-void MousePopulateCells(int x, int y)
-{
-	double xWorld = x, yWorld = y;
-	WindowToCellCoordinates(xWorld, yWorld);
-	if (cm.InBounds(xWorld,yWorld) && cm(xWorld, yWorld) == UNPOPULATED)
-	{
-		cm.Update(xWorld, yWorld, POPULATED);
-		glutPostRedisplay();
-	}
-}
-
-
-void MouseUnpopulateCells(int x, int y)
-{
-	double xWorld = x, yWorld = y;
-	WindowToCellCoordinates(xWorld, yWorld);
-	if (cm.InBounds(xWorld,yWorld) && cm(xWorld, yWorld) == POPULATED)
-	{
-		cm.Update(xWorld, yWorld, UNPOPULATED);
-		glutPostRedisplay();
-	}
-}
-
-void MousePauseAutomata(int button, int state, int x, int y)
-{
-	if (button == GLUT_LEFT && state == GLUT_DOWN)
+	static void MouseMotionPopulateCells(int x, int y)
 	{
 		double xWorld = x, yWorld = y;
-		WindowToCellCoordinates(xWorld, yWorld);
-		AutomataButtonPress(xWorld, yWorld);
+		WindowToWorldCoordinates(xWorld, yWorld);
+		if (CM(xWorld, yWorld) == UNPOPULATED)
+		{
+			CM.Update(xWorld, yWorld, POPULATED);
+			glutPostRedisplay();
+		}
 	}
-}
 
 
-void AutomataButtonPress(double x, double y)
-{
-	if (CApaused == 0)
+	static void MouseMotionUnpopulateCells(int x, int y)
 	{
-		glutIdleFunc(NULL);
-		glutMouseFunc(MouseSetupClick);
-		CApaused = 1;
+		double xWorld = x, yWorld = y;
+		WindowToWorldCoordinates(xWorld, yWorld);
+		if (CM(xWorld, yWorld) == POPULATED)
+		{
+			CM.Update(xWorld, yWorld, UNPOPULATED);
+			glutPostRedisplay();
+		}
 	}
-	else if (x >= startButton[0] && x <= startButton[1] && y >= startButton[2] && y <= startButton[3])
+
+
+	static void ButtonPressCheck(double x, double y)
 	{
-		CApaused = 0;
-		glutMouseFunc(MousePauseAutomata);
-		glutIdleFunc(StartAutomata);
+		if (StartButtonPressed(x, y))
+		{
+			_paused = FALSE;
+			glutIdleFunc(Run);
+			glutMouseFunc(MouseRunning);
+		}
 	}
-}
 
 
-void Reshape(int w, int h)
-
-{
-	WindowWidth = w;
-	WindowHeight = h;
-	if (h * WidthHeightRatio <= w)
-		
-		glViewport((w / 2) - (h * WidthHeightRatio / 2), 0, h * WidthHeightRatio, h);
-	else
-		
-		glViewport(0, (h / 2) - ((w / WidthHeightRatio) / 2), w, w/WidthHeightRatio);
-	glutPostRedisplay();
-	
-}
+	static int StartButtonPressed(double x, double y)
+	{
+		if (x >= _startBorder[0][0] && x <= _startBorder[1][0] && y >= _startBorder[2][1] && y <= _startBorder[1][1])
+			return TRUE;
+		else
+			return FALSE;
+	}
 
 
-void DisplayCellAutomataPaused()
-
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	FillCells();
-
-	DrawGrid();
-
-	DrawStartButton();
-
-	glFlush();
-}
-
-void StartAutomata()
-{
-	Rule gameOfLife1(POPULATED, LESS_THAN, 2, UNPOPULATED);
-	Rule gameOfLife2(POPULATED, GREATER_THAN, 3, UNPOPULATED);
-	Rule gameOfLife3(UNPOPULATED, EQUAL_TO, 3, POPULATED);
-	int i, j;
-	Sleep(100);
-		cm.Update();
+	static void Run()
+	{
+		Rule gameOfLife1(POPULATED, LESS_THAN, 2, UNPOPULATED);
+		Rule gameOfLife2(POPULATED, GREATER_THAN, 3, UNPOPULATED);
+		Rule gameOfLife3(UNPOPULATED, EQUAL_TO, 3, POPULATED);
+		int i, j;
+		Sleep(100);
+		CM.Update();
 		glutPostRedisplay();
 		for (i = 0; i < GRID_MAX; i++)
 		{
@@ -298,83 +355,117 @@ void StartAutomata()
 				gameOfLife3.AppyRule(i, j);
 			}
 		}
-}
-
-
-void DrawStartButton()
-{
-	int i;
-	float barX0 = GRID_MAX, barX1 = VRwidth, barY0 = 0, barY1 = VRheight, 
-		barWidth = barX1 - barX0, barHeight =  barY1 - barY0;
-	
-	float startBorder[][2] = { {barX0 + 0.05 * barWidth, barY0 + 0.9 * barHeight}, 
-		{barX0 + 0.95 * barWidth, barY0 + 0.9 * barHeight}, {barX0 + 0.95 * barWidth,barY0 + 0.8 * barHeight},
-		{barX0 + 0.05 * barWidth, barY0 + 0.8 * barHeight} };
-
-	startButton[0] = startBorder[0][0];
-	startButton[1] = startBorder[1][0];
-	startButton[2] = startBorder[2][1];
-	startButton[3] = startBorder[1][1];
-
-
-	float startInner[][2] = { {barX0 + 0.1*barWidth,barY0 + 0.895*barHeight},
-		{ barX0 + 0.895*barWidth,barY0 + 0.895*barHeight },{ barX0 + 0.895*barWidth,barY0 + 0.805*barHeight },
-		{ barX0 + 0.1*barWidth,barY0 + 0.805*barHeight } };
-
-	float playTriangle[][2] = { {} };
-	
-	glColor3f(0, 0, 0);
-	glBegin(GL_QUADS);
-	for (i = 0; i < 4; i++) glVertex2fv(startBorder[i]);
-	glEnd();
-
-	glColor3f(0.8, 0.8, 0.8);
-	glBegin(GL_QUADS);
-	for (i = 0; i < 4; i++) glVertex2fv(startInner[i]);
-	glEnd();
-
-
-}
-
-
-void DrawGrid()
-
-{
-	glColor3f(0.8, 0.8, 0.8);
-	glBegin(GL_LINES);
-	for (int i = 0; i < GRID_MAX; i++)
-	{
-		glVertex2f(0, i);
-		glVertex2f(GRID_MAX, i);
-		glVertex2f(i, 0);
-		glVertex2f(i, GRID_MAX);
 	}
-	glEnd();
-}
 
 
-void FillCells()
+	static void MouseRunning(int button, int state, int x, int y)
+	{
+		if (button == GLUT_LEFT && state == GLUT_DOWN)
+		{
+			double xWorld = x, yWorld = y;
+			WindowToWorldCoordinates(xWorld, yWorld);
+			if (StartButtonPressed(xWorld, yWorld))
+			{
+				_paused = TRUE;
+				glutIdleFunc(NULL);
+				glutMouseFunc(MouseSetup);
+			}
+		}
+	}
+
+
+	static void DrawGrid()
+	{
+		glColor3f(0.8, 0.8, 0.8);
+		for (int i = 0; i < GRID_MAX; i++)
+		{
+			glTranslatef(i, 0, 0);
+			glCallList(_gridLineV);
+			glTranslatef(-i, i, 0);
+			glCallList(_gridLineH);
+			glTranslatef(0, -i, 0);
+		}
+	}
+
+
+	static void DrawFilledCells()
+	{
+		int i, j;
+		glColor3f(1, 1, 0);
+		for (i = 0; i < GRID_MAX; i++)
+			for (j = 0; j < GRID_MAX; j++)
+				if (CM(i, j) == POPULATED)
+				{
+					glPushMatrix();
+					glTranslatef(i, j, 0);
+					glCallList(_cell);
+					glPopMatrix();
+				}
+	}
+
+
+	static void DrawStartButton()
+	{
+		glColor3f(0, 0, 0);
+		glCallList(_startButton);
+
+		glPushMatrix();
+		glTranslatef(_startOffsetX, _startOffsetY, 0);
+		glScalef(0.9, 0.9, 0);
+		glColor3f(0.5, 0.5, 0.5);
+		glCallList(_startButton);
+		glColor3f(0, 0, 0);
+		if (_paused)
+			glCallList(_playSymbol);
+		else
+			glCallList(_pauseSymbol);
+		glPopMatrix();
+
+	}
+
+}ViewAutomaton;
+float ViewAutomaton::_barX0, ViewAutomaton::_barY0, ViewAutomaton::_barX1, ViewAutomaton::_barY1, ViewAutomaton::_barWidth, ViewAutomaton::_barHeight, ViewAutomaton::_startBorder[4][2], ViewAutomaton::_startOffsetX, ViewAutomaton::_startOffsetY;
+int ViewAutomaton::_paused, ViewAutomaton::_gridLineV, ViewAutomaton::_gridLineH, ViewAutomaton::_cell, ViewAutomaton::_startButton, ViewAutomaton::_playSymbol, ViewAutomaton::_pauseSymbol;
+
+
+int main(int argc, char** argv)
 
 {
-	int i, j;
-	glColor3f(1, 1, 0);
-	glBegin(GL_QUADS);
-	for (i = 0; i < GRID_MAX; i++)
-		for (j = 0; j < GRID_MAX;j++)
-			if (cm(i,j)==POPULATED)
-			{
-				//cout << (rand() % 80 + 20) / 100.0 << endl;
-				//glColor3f((rand() % 95 + 5) / 100.0, (rand() % 95 + 5) / 100.0, (rand() % 95 + 5) / 100.0);
-				glVertex2f(i, j);
-				glVertex2f(i + 1, j);
-				glVertex2f(i + 1, j + 1);
-				glVertex2f(i, j + 1);
-			}
-	glEnd();
+	srand(time(NULL));
+	cout << "Enter Sqaure Grid Size: ";
+	cin >> GRID_MAX;
+
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowSize(WindowWidth, WindowHeight);
+	glutCreateWindow("Cellular Automaton 1.1");
+
+	ViewAutomaton.HandOver();
+	glutReshapeFunc(Reshape);
+
+	glutMainLoop();
+
+	return 0;
 }
 
 
-void WindowToCellCoordinates(double &x, double &y)
+void Reshape(int w, int h)
+
+{
+	WindowWidth = w;
+	WindowHeight = h;
+	if (h * WidthHeightRatio <= w)
+
+		glViewport((w / 2) - (h * WidthHeightRatio / 2), 0, h * WidthHeightRatio, h);
+	else
+
+		glViewport(0, (h / 2) - ((w / WidthHeightRatio) / 2), w, w / WidthHeightRatio);
+	glutPostRedisplay();
+
+}
+
+
+void WindowToWorldCoordinates(double &x, double &y)
 
 {
 	int Padding = abs(WindowWidth - WindowHeight * WidthHeightRatio) / 2;

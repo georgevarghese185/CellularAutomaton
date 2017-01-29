@@ -113,7 +113,7 @@ me to the concept of a cellular automaton and Conway's game of life and inspired
 me to try making a cellular automaton by myself and submit it as my computer 
 graphics lab project at that time.
 
--Suraj Sivakumar (http://certigate.org) for writing and providing me the Win32 
+-Suraj Sivakumar (http://certigate.wordpress.com) for writing and providing me the Win32 
 code for the text used to display the title and version on the start screen. 
 (Code found in TextManip.h and TextManip.cpp)
 
